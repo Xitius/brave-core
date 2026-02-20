@@ -17,6 +17,7 @@
 #include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_origin/buildflags/buildflags.h"
 #include "brave/components/brave_talk/buildflags/buildflags.h"
+#include "brave/components/brave_wallet/common/buildflags/buildflags.h"
 #include "brave/components/constants/brave_switches.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/playlist/core/common/buildflags/buildflags.h"
@@ -152,14 +153,16 @@ SidePanelEntryId SidePanelIdFromSideBarItemType(BuiltInItemType type) {
     case BuiltInItemType::kChatUI:
       return SidePanelEntryId::kChatUI;
 #endif
+#if BUILDFLAG(ENABLE_BRAVE_WALLET)
     case BuiltInItemType::kWallet:
-      [[fallthrough]];
+      return SidePanelEntryId::kWallet;
+#endif
 #if BUILDFLAG(ENABLE_BRAVE_TALK)
     case BuiltInItemType::kBraveTalk:
-      [[fallthrough]];
+      break;
 #endif
     case BuiltInItemType::kHistory:
-      [[fallthrough]];
+      break;
     case BuiltInItemType::kNone:
       break;
   }
@@ -178,6 +181,10 @@ std::optional<BuiltInItemType> BuiltInItemTypeFromSidePanelId(
 #if BUILDFLAG(ENABLE_PLAYLIST)
     case SidePanelEntryId::kPlaylist:
       return BuiltInItemType::kPlaylist;
+#endif
+#if BUILDFLAG(ENABLE_BRAVE_WALLET)
+    case SidePanelEntryId::kWallet:
+      return BuiltInItemType::kWallet;
 #endif
 #if BUILDFLAG(ENABLE_AI_CHAT)
     case SidePanelEntryId::kChatUI:
@@ -228,6 +235,11 @@ void SetLastUsedSidePanel(PrefService* prefs,
 #if BUILDFLAG(ENABLE_PLAYLIST)
       case SidePanelEntryId::kPlaylist:
         type = BuiltInItemType::kPlaylist;
+        break;
+#endif
+#if BUILDFLAG(ENABLE_BRAVE_WALLET)
+      case SidePanelEntryId::kWallet:
+        type = BuiltInItemType::kWallet;
         break;
 #endif
 #if BUILDFLAG(ENABLE_AI_CHAT)

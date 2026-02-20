@@ -126,6 +126,10 @@ source_set("browser_tests") {
   if (enable_playlist) {
     deps += [ "//brave/components/playlist/core/common" ]
   }
+
+  if (enable_brave_wallet) {
+    deps += [ "//brave/components/brave_wallet/common" ]
+  }
 }
 
 source_set("unit_tests") {

@@ -20,6 +20,10 @@ class WalletBubbleManagerDelegateImpl : public WalletBubbleManagerDelegate {
  public:
   explicit WalletBubbleManagerDelegateImpl(content::WebContents* web_contents,
                                            const GURL& webui_url);
+
+  // Returns true if the constructor routed the request to the wallet side
+  // panel instead of creating a popup bubble.
+  bool redirected_to_side_panel() const { return redirected_to_side_panel_; }
   WalletBubbleManagerDelegateImpl(const WalletBubbleManagerDelegateImpl&) =
       delete;
   WalletBubbleManagerDelegateImpl& operator=(
@@ -35,6 +39,7 @@ class WalletBubbleManagerDelegateImpl : public WalletBubbleManagerDelegate {
  private:
   // `this` never outlives `web_contents_` instance.
   raw_ptr<content::WebContents> web_contents_ = nullptr;
+  bool redirected_to_side_panel_ = false;
   std::unique_ptr<WalletWebUIBubbleManager> webui_bubble_manager_;
 };
 

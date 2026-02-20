@@ -208,12 +208,13 @@ void BraveWalletTabHelper::ClearSolanaConnectedAccounts(
 
 #if !BUILDFLAG(IS_ANDROID)
 void BraveWalletTabHelper::ShowBubbleImpl(GURL url) {
+  // MaybeCreate returns nullptr if the wallet side panel is already visible
+  // (routing the request there) or if wallet is not allowed for the context.
   wallet_bubble_manager_delegate_ =
       WalletBubbleManagerDelegate::MaybeCreate(&GetWebContents(), url);
   if (!wallet_bubble_manager_delegate_) {
     return;
   }
-  // Suppress request if not from active web_contents.
   if (!IsWebContentsActive(GetWebContents())) {
     return;
   }

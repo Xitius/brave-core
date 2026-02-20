@@ -20,6 +20,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_features.h"
 #include "chrome/browser/ui/views/bubble/webui_bubble_manager.h"
 #include "chrome/browser/ui/views/frame/top_container_view.h"
 #include "components/grit/brave_components_strings.h"
@@ -176,8 +177,12 @@ WalletBubbleManagerDelegate::MaybeCreate(content::WebContents* web_contents,
     return nullptr;
   }
 
-  return std::make_unique<WalletBubbleManagerDelegateImpl>(web_contents,
-                                                           webui_url);
+  auto delegate = std::make_unique<WalletBubbleManagerDelegateImpl>(
+      web_contents, webui_url);
+  if (delegate->redirected_to_side_panel()) {
+    return nullptr;
+  }
+  return delegate;
 }
 
 WalletBubbleManagerDelegateImpl::WalletBubbleManagerDelegateImpl(
@@ -186,6 +191,13 @@ WalletBubbleManagerDelegateImpl::WalletBubbleManagerDelegateImpl(
     : web_contents_(web_contents) {
   Browser* browser = chrome::FindBrowserWithTab(web_contents_);
   DCHECK(browser);
+
+  // If the wallet side panel is already visible, route the request there
+  // instead of creating a popup bubble.
+  if (browser->GetFeatures().NavigateWalletSidePanelIfActive(webui_url)) {
+    redirected_to_side_panel_ = true;
+    return;
+  }
 
   views::View* anchor_view;
   if (browser->is_type_normal()) {
@@ -202,7 +214,9 @@ WalletBubbleManagerDelegateImpl::WalletBubbleManagerDelegateImpl(
 }
 
 WalletBubbleManagerDelegateImpl::~WalletBubbleManagerDelegateImpl() {
-  webui_bubble_manager_->CloseBubble();
+  if (webui_bubble_manager_) {
+    webui_bubble_manager_->CloseBubble();
+  }
 }
 
 void WalletBubbleManagerDelegateImpl::ShowBubble() {

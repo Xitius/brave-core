@@ -18,6 +18,9 @@ namespace brave_wallet {
 
 class WalletBubbleManagerDelegate {
  public:
+  // Creates a bubble delegate, or returns nullptr if wallet is not allowed
+  // for the context or if the wallet side panel is already visible (in which
+  // case the request is routed to the side panel instead).
   static std::unique_ptr<WalletBubbleManagerDelegate> MaybeCreate(
       content::WebContents* web_contents,
       const GURL& webui_url);
