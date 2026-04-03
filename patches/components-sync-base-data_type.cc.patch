@@ -1,0 +1,52 @@
+diff --git a/components/sync/base/data_type.cc b/components/sync/base/data_type.cc
+index 8624d8af6fd389016f029c129dfea55200311451..55d78e1125ff8e77b0f4a8131a2847545d8e4aad 100644
+--- a/components/sync/base/data_type.cc
++++ b/components/sync/base/data_type.cc
+@@ -1091,6 +1091,22 @@ constexpr std::array<DataTypeInfo, syncer::GetNumDataTypes()>
+                 UnsyncedDataCheckOnSignoutPolicy::kNone,
+             .cross_user_sharing_policy = CrossUserSharingPolicy::kNone,
+         },
++        {
++            .type = AI_CHAT_CONVERSATION,
++            .specifics_field_number =
++                sync_pb::EntitySpecifics::kAiChatConversationFieldNumber,
++            .debug_string = "AI Chat Conversation",
++            .histogram_suffix = "AI_CHAT_CONVERSATION",
++            .stable_lowercase_string = "ai_chat_conversation",
++            .encryption_policy =
++                EncryptionPolicy::kEncryptedIfCustomPassphraseSet,
++            .priority = DataTypePriority::kRegular,
++            .communication_direction = CommunicationDirection::kRegularTwoWay,
++            .apply_updates_batch_policy = ApplyUpdatesBatchPolicy::kStandard,
++            .unsynced_data_check_on_signout_policy =
++                UnsyncedDataCheckOnSignoutPolicy::kNone,
++            .cross_user_sharing_policy = CrossUserSharingPolicy::kNone,
++        },
+         {
+             .type = NIGORI,
+             .specifics_field_number =
+@@ -1111,7 +1127,7 @@ constexpr std::array<DataTypeInfo, syncer::GetNumDataTypes()>
+     }};
+ 
+ // LINT.IfChange(DataTypeHistogramSuffix)
+-static_assert(GetNumDataTypes() == 64,
++static_assert(GetNumDataTypes() == 65,
+               "When adding a new type, update kDataTypeInfoTable, update "
+               "histograms.xml and follow the integration checklist in "
+               "https://www.chromium.org/developers/design-documents/sync/"
+@@ -1331,6 +1347,7 @@ void AddDefaultFieldValue(DataType type, sync_pb::EntitySpecifics* specifics) {
+     case THEMES_ANDROID:
+       specifics->mutable_theme_android();
+       break;
++      BRAVE_DATA_TYPE_ADD_DEFAULT_FIELD_VALUE
+   }
+ }
+ 
+@@ -1683,6 +1700,7 @@ DataTypeForHistograms DataTypeHistogramValue(DataType data_type) {
+       return DataTypeForHistograms::kAccessibilityAnnotation;
+     case THEMES_ANDROID:
+       return DataTypeForHistograms::kThemesAndroid;
++      BRAVE_DATA_TYPE_HISTOGRAM_VALUE
+   }
+   NOTREACHED();
+ }
