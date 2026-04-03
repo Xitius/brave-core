@@ -1,0 +1,22 @@
+diff --git a/components/sync/base/data_type.h b/components/sync/base/data_type.h
+index a2f774daaf70474d80acafc9d1f2e58163dbe418..3d1f0be68dd2bce8be620a77a84ad5cc26abc351 100644
+--- a/components/sync/base/data_type.h
++++ b/components/sync/base/data_type.h
+@@ -204,7 +204,7 @@ enum DataType {
+   // A theme object specifically for Android devices.
+   THEMES_ANDROID,
+ 
+-  LAST_USER_DATA_TYPE = THEMES_ANDROID,
++  AI_CHAT_CONVERSATION, LAST_USER_DATA_TYPE = AI_CHAT_CONVERSATION,
+ 
+   // ---- Control Types ----
+   // An object representing a set of Nigori keys.
+@@ -314,7 +314,7 @@ enum class DataTypeForHistograms {
+   kThemesIos = 78,
+   kAccessibilityAnnotation = 79,
+   kThemesAndroid = 80,
+-  kMaxValue = kThemesAndroid,
++  kAIChatConversation = 81, kMaxValue = kAIChatConversation,
+ };
+ // LINT.ThenChange(/tools/metrics/histograms/metadata/sync/enums.xml:SyncDataTypes)
+ 
