@@ -644,6 +644,7 @@ public abstract class BraveActivity extends ChromeActivity
         if (inPicture) {
             mIsYouTubePictureInPictureExiting = false;
             mIsYouTubePictureInPictureInterruptedByScreenLock = false;
+            maybeAdoptYouTubePictureInPictureSession();
         }
         if (inPicture && mResumeMediaSession) {
             mResumeMediaSession = false;
@@ -673,6 +674,22 @@ public abstract class BraveActivity extends ChromeActivity
             }
             handleYouTubePictureInPictureModeExited();
         }
+    }
+
+    private void maybeAdoptYouTubePictureInPictureSession() {
+        if (mIsYouTubePictureInPictureActive) {
+            return;
+        }
+
+        final WebContents currentWebContents = getCurrentWebContents();
+        if (currentWebContents == null
+                || currentWebContents.isDestroyed()
+                || !BraveYouTubeScriptInjectorNativeHelper.isPictureInPictureAvailable(
+                        currentWebContents)) {
+            return;
+        }
+
+        onYouTubePictureInPictureRequested(currentWebContents);
     }
 
     /**
