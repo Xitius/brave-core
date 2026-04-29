@@ -300,7 +300,7 @@ bool BraveHorizontalTabStripRegionView::HaveScrollButtons() const {
 void BraveHorizontalTabStripRegionView::OnWorkspacesButtonPressed() {
   WorkspacesBubbleView::Show(
       workspaces_button_,
-      tab_strip_->GetBrowserWindowInterface()->GetProfile());
+      tab_strip_->GetBrowserWindowInterface()->GetBrowserForMigrationOnly());
 }
 
 views::View::Views BraveHorizontalTabStripRegionView::GetChildrenInZOrder() {
