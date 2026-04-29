@@ -92,6 +92,101 @@ public class CustomizeBraveMenu {
     // Menu items initialized as hidden unless an explicit user preference already exists.
     private static final int[] MENU_IDS_INVISIBLE_BY_DEFAULT = {R.id.exit_id};
 
+    // Ordered lists of main-menu and page-action item IDs for the static default bundle.
+    // pin_tab, manage_all_windows and open_webapk are excluded: they have no static title
+    // (unknown / format strings requiring runtime arguments).
+    private static final int[] MAIN_MENU_ITEM_IDS = {
+        R.id.new_tab_menu_id,
+        R.id.new_incognito_tab_menu_id,
+        R.id.add_to_group_menu_id,
+        R.id.new_window_menu_id,
+        R.id.new_incognito_window_menu_id,
+        R.id.move_to_other_window_menu_id,
+        R.id.open_history_menu_id,
+        R.id.downloads_menu_id,
+        R.id.all_bookmarks_menu_id,
+        R.id.recent_tabs_menu_id,
+        R.id.brave_wallet_id,
+        R.id.brave_playlist_id,
+        R.id.add_to_playlist_id,
+        R.id.brave_news_id,
+        R.id.brave_leo_id,
+        R.id.request_brave_vpn_id,
+        R.id.brave_rewards_id,
+        R.id.set_default_browser,
+        R.id.exit_id,
+    };
+
+    private static final int[] PAGE_ACTION_ITEM_IDS = {
+        R.id.page_zoom_id,
+        R.id.share_menu_id,
+        R.id.download_page_id,
+        R.id.print_id,
+        R.id.enable_price_tracking_menu_id,
+        R.id.disable_price_tracking_menu_id,
+        R.id.ai_web_menu_id,
+        R.id.find_in_page_id,
+        R.id.translate_id,
+        R.id.readaloud_menu_id,
+        R.id.reader_mode_menu_id,
+        R.id.open_with_id,
+        R.id.universal_install,
+        R.id.reader_mode_prefs_id,
+        R.id.auto_dark_web_contents_id,
+        R.id.get_image_descriptions_id,
+        R.id.listen_to_feed_id,
+    };
+
+    // Static mapping of menu item ID → string resource ID used when building the default bundle
+    // (i.e., when settings is opened outside of the app-menu flow and no live bundle is available).
+    private static final SparseIntArray MENU_TITLE_MAP = new SparseIntArray();
+
+    static {
+        // Main menu
+        MENU_TITLE_MAP.put(R.id.new_tab_menu_id, R.string.menu_new_tab);
+        MENU_TITLE_MAP.put(R.id.new_incognito_tab_menu_id, R.string.menu_new_incognito_tab);
+        MENU_TITLE_MAP.put(R.id.add_to_group_menu_id, R.string.menu_add_tab_to_group);
+        MENU_TITLE_MAP.put(R.id.new_window_menu_id, R.string.menu_new_window);
+        MENU_TITLE_MAP.put(R.id.new_incognito_window_menu_id, R.string.menu_new_incognito_window);
+        MENU_TITLE_MAP.put(R.id.move_to_other_window_menu_id, R.string.menu_move_to_other_window);
+        MENU_TITLE_MAP.put(R.id.open_history_menu_id, R.string.menu_history);
+        MENU_TITLE_MAP.put(R.id.downloads_menu_id, R.string.menu_downloads);
+        MENU_TITLE_MAP.put(R.id.all_bookmarks_menu_id, R.string.menu_bookmarks);
+        MENU_TITLE_MAP.put(R.id.recent_tabs_menu_id, R.string.menu_recent_tabs);
+        MENU_TITLE_MAP.put(R.id.brave_wallet_id, R.string.menu_brave_wallet);
+        MENU_TITLE_MAP.put(R.id.brave_playlist_id, R.string.brave_playlist);
+        MENU_TITLE_MAP.put(R.id.add_to_playlist_id, R.string.playlist_add_to_playlist);
+        MENU_TITLE_MAP.put(R.id.brave_news_id, R.string.brave_news_title);
+        MENU_TITLE_MAP.put(R.id.brave_leo_id, R.string.menu_brave_leo);
+        MENU_TITLE_MAP.put(R.id.request_brave_vpn_id, R.string.brave_vpn);
+        MENU_TITLE_MAP.put(R.id.brave_rewards_id, R.string.menu_brave_rewards);
+        MENU_TITLE_MAP.put(R.id.set_default_browser, R.string.menu_set_default_browser);
+        MENU_TITLE_MAP.put(R.id.exit_id, R.string.menu_exit);
+        // Page actions
+        MENU_TITLE_MAP.put(R.id.page_zoom_id, R.string.page_zoom_menu_title);
+        MENU_TITLE_MAP.put(R.id.share_menu_id, R.string.menu_share_page);
+        MENU_TITLE_MAP.put(R.id.download_page_id, R.string.menu_download_page);
+        MENU_TITLE_MAP.put(R.id.print_id, R.string.menu_print);
+        MENU_TITLE_MAP.put(R.id.enable_price_tracking_menu_id,
+                R.string.enable_price_tracking_menu_item);
+        MENU_TITLE_MAP.put(R.id.disable_price_tracking_menu_id,
+                R.string.disable_price_tracking_menu_item);
+        MENU_TITLE_MAP.put(R.id.ai_web_menu_id, R.string.menu_summarize_with_ai);
+        MENU_TITLE_MAP.put(R.id.find_in_page_id, R.string.menu_find_in_page);
+        MENU_TITLE_MAP.put(R.id.translate_id, R.string.menu_translate);
+        MENU_TITLE_MAP.put(R.id.readaloud_menu_id, R.string.menu_listen_to_this_page);
+        MENU_TITLE_MAP.put(R.id.reader_mode_menu_id, R.string.show_reading_mode_text);
+        MENU_TITLE_MAP.put(R.id.open_with_id, R.string.menu_open_with);
+        MENU_TITLE_MAP.put(R.id.universal_install, R.string.menu_add_to_homescreen);
+        MENU_TITLE_MAP.put(R.id.reader_mode_prefs_id, R.string.menu_reader_mode_prefs);
+        MENU_TITLE_MAP.put(R.id.auto_dark_web_contents_id, R.string.menu_auto_dark_web_contents);
+        MENU_TITLE_MAP.put(R.id.get_image_descriptions_id, R.string.menu_get_image_descriptions);
+        MENU_TITLE_MAP.put(R.id.listen_to_feed_id, R.string.menu_listen_to_feed);
+        if (ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_SHRED)) {
+            MENU_TITLE_MAP.put(R.id.brave_shred_id, R.string.brave_menu_shred_text);
+        }
+    }
+
     /**
      * Static mapping of menu item IDs to their corresponding drawable resource IDs. Uses
      * SparseIntArray for optimal performance and memory efficiency on Android when mapping resource
@@ -225,6 +320,46 @@ public class CustomizeBraveMenu {
         modelList.clear();
         if (!out.isEmpty()) {
             modelList.addAll(out);
+        }
+    }
+
+    /**
+     * Builds a default bundle for {@link BraveCustomizeMenuPreferenceFragment} using the static
+     * item lists and title map. Used when settings is opened without a live app-menu context (e.g.
+     * from search results or a deep link), so the fragment can show all toggles even without the
+     * live menu model lists.
+     */
+    public static Bundle buildDefaultBundle(Context context) {
+        Resources resources = context.getResources();
+        ArrayList<MenuItemData> mainMenuItems = new ArrayList<>();
+        for (int id : MAIN_MENU_ITEM_IDS) {
+            mainMenuItems.add(new MenuItemData(id, getTitleForId(context, id),
+                    isVisible(resources, id)));
+        }
+        if (ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_SHRED)) {
+            mainMenuItems.add(new MenuItemData(R.id.brave_shred_id,
+                    getTitleForId(context, R.id.brave_shred_id),
+                    isVisible(resources, R.id.brave_shred_id)));
+        }
+        ArrayList<MenuItemData> pageActionItems = new ArrayList<>();
+        for (int id : PAGE_ACTION_ITEM_IDS) {
+            pageActionItems.add(new MenuItemData(id, getTitleForId(context, id),
+                    isVisible(resources, id)));
+        }
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(KEY_MAIN_MENU_ITEM_LIST, mainMenuItems);
+        bundle.putParcelableArrayList(KEY_PAGE_ACTION_ITEM_LIST, pageActionItems);
+        return bundle;
+    }
+
+    private static String getTitleForId(Context context, @IdRes int id) {
+        int stringId = MENU_TITLE_MAP.get(id, 0);
+        if (stringId == 0) return "";
+        try {
+            return context.getString(stringId);
+        } catch (java.util.MissingFormatArgumentException e) {
+            // Format string requires runtime argument — return empty rather than crash.
+            return "";
         }
     }
 

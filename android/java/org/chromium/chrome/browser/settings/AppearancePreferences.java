@@ -464,6 +464,12 @@ public class AppearancePreferences extends AppearanceSettingsFragment
                             context, false)) {
                         indexData.removeEntryForKey(frag, PREF_ADDRESS_BAR);
                     }
+
+                    // brave_customize_menu requires a live app-menu bundle (menu items + page
+                    // actions) to populate. Without it BraveCustomizeMenuPreferenceFragment
+                    // shows empty sections. Remove from search so users navigate to Appearance
+                    // settings manually and launch Customize menu with the proper context.
+                    indexData.removeEntryForKey(frag, PREF_BRAVE_CUSTOMIZE_MENU);
                 }
             };
 }

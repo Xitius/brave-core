@@ -58,16 +58,19 @@ public class BraveCustomizeMenuPreferenceFragment extends ChromeBaseSettingsFrag
         SettingsUtils.addPreferencesFromResource(this, R.xml.brave_customize_menu_preferences);
         mIconSizePx =
                 ViewUtils.dpToPx(requireContext(), CustomizeBraveMenu.PREFERENCE_MENU_ICON_SIZE_DP);
-        // Get menu items from bundle passed by calling activity.
-        final Bundle bundle = getArguments();
-        if (bundle != null) {
-            final PreferenceCategory mainMenuSection = findPreference(MAIN_MENU_SECTION);
-            final PreferenceCategory pageActionsSection = findPreference(PAGE_ACTIONS_SECTION);
-            addSwitchesFromBundle(
-                    mainMenuSection, bundle, CustomizeBraveMenu.KEY_MAIN_MENU_ITEM_LIST);
-            addSwitchesFromBundle(
-                    pageActionsSection, bundle, CustomizeBraveMenu.KEY_PAGE_ACTION_ITEM_LIST);
+        // Get menu items from bundle passed by calling activity, or fall back to a static default
+        // bundle when opened without a live app-menu context (e.g. from settings search).
+        Bundle bundle = getArguments();
+        if (bundle == null
+                || (!bundle.containsKey(CustomizeBraveMenu.KEY_MAIN_MENU_ITEM_LIST)
+                        && !bundle.containsKey(CustomizeBraveMenu.KEY_PAGE_ACTION_ITEM_LIST))) {
+            bundle = CustomizeBraveMenu.buildDefaultBundle(requireContext());
         }
+        final PreferenceCategory mainMenuSection = findPreference(MAIN_MENU_SECTION);
+        final PreferenceCategory pageActionsSection = findPreference(PAGE_ACTIONS_SECTION);
+        addSwitchesFromBundle(mainMenuSection, bundle, CustomizeBraveMenu.KEY_MAIN_MENU_ITEM_LIST);
+        addSwitchesFromBundle(
+                pageActionsSection, bundle, CustomizeBraveMenu.KEY_PAGE_ACTION_ITEM_LIST);
     }
 
     private void addSwitchesFromBundle(
