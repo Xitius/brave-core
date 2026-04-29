@@ -2353,6 +2353,13 @@ public abstract class BraveActivity extends ChromeActivity
         getYouTubePictureInPictureController().onFullscreenInterrupted();
     }
 
+    /**
+     * @see BraveYouTubePictureInPictureController#onNewTabDuringPictureInPicture
+     */
+    public void onYouTubePictureInPictureNewTab() {
+        getYouTubePictureInPictureController().onNewTabDuringPictureInPicture();
+    }
+
     private BraveYouTubePictureInPictureController getYouTubePictureInPictureController() {
         if (mYouTubePictureInPictureController == null) {
             mYouTubePictureInPictureController = new BraveYouTubePictureInPictureController(this);
