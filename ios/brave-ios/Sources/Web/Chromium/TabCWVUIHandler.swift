@@ -16,6 +16,10 @@ class TabCWVUIHandler: NSObject, BraveWebViewUIDelegate {
     self.tab = tab
   }
 
+  deinit {
+    print("TabCWVUIHandler died")
+  }
+
   func webView(
     _ webView: CWVWebView,
     createWebViewWith configuration: CWVWebViewConfiguration,
