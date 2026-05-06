@@ -5,6 +5,7 @@
 
 import * as React from 'react'
 import * as Mojom from '../../../common/mojom'
+import { getGroupVisitedLinks } from '../conversation_entries/conversation_entries_utils'
 
 export default function useExtractTaskData(
   assistantEntryGroup: Mojom.ConversationTurn[],
@@ -13,8 +14,11 @@ export default function useExtractTaskData(
     // Individual tasks, split by CompletionEvent
     const taskItems: Mojom.ConversationEntryEvent[][] = []
     // All completion events are allowed the links provided by the whole response
-    // group.
-    const allowedLinks = new Set<string>()
+    // group: web search citations from sourcesEvent and tool-emitted URLs
+    // from visited_links artifacts.
+    const allowedLinks = new Set<string>(
+      getGroupVisitedLinks(assistantEntryGroup),
+    )
 
     for (const event of assistantEntryGroup.flatMap(
       (entry) => entry.events ?? [],

@@ -30,6 +30,7 @@ import AssistantResponse from '../assistant_response'
 import EditInput from '../edit_input'
 import EditIndicator from '../edit_indicator'
 import {
+  getGroupVisitedLinks,
   getReasoningText,
   getToolArtifacts,
   groupConversationEntries,
@@ -312,6 +313,15 @@ function ConversationEntries(props: { scrollToBottom: () => void }) {
       ? getToolArtifacts(group)
       : null
 
+    // Trusted-links artifacts are flattened across the whole group because
+    // a client-side tool call lives in a separate assistant entry from the
+    // follow-up response that references the tool's URLs. Without this, the
+    // response's anchors would be filtered out by MarkdownRenderer since the
+    // trust-list lives on the tool_use_event in the prior entry.
+    // (sourcesEvent stays per-entry below -- web search citations belong to
+    // the specific response that produced them.)
+    const groupVisitedLinks = getGroupVisitedLinks(group)
+
     return (
       <div key={firstEntryEdit.uuid || entryNumber}>
         <div
@@ -336,15 +346,17 @@ function ConversationEntries(props: { scrollToBottom: () => void }) {
                 const isActiveEntryInActiveGroup =
                   isActiveGroup && i === group.length - 1
                 const currentEntryEdit = entry.edits?.at(-1) ?? entry
-                const allowedLinksForEntry: string[] =
-                  currentEntryEdit.events?.flatMap(
+                const entryText = getCompletion(currentEntryEdit)
+                const hasReasoning = entryText.includes('<think>')
+                const allowedLinksForEntry: string[] = [
+                  ...(currentEntryEdit.events?.flatMap(
                     (event) =>
                       event.sourcesEvent?.sources?.map(
                         (source) => source.url.url,
-                      ) || [],
-                  ) || []
-                const entryText = getCompletion(currentEntryEdit)
-                const hasReasoning = entryText.includes('<think>')
+                      ) ?? [],
+                  ) ?? []),
+                  ...groupVisitedLinks,
+                ]
 
                 return (
                   <React.Fragment key={entry.uuid || i}>

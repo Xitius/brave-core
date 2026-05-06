@@ -279,3 +279,32 @@ export function getToolArtifacts(
 
   return [...artifactsWithoutId, ...artifactsById.values()]
 }
+
+/**
+ * Collects HTTPS URLs from `visited_links` artifacts on tool_use events
+ * across the group. Client-side tools (e.g. semantic history search) emit
+ * these as a sidechannel trust-list so the assistant's reply can render the
+ * tool's URLs as anchors. Bad JSON or non-string array entries are skipped.
+ */
+export function getGroupVisitedLinks(
+  group: Mojom.ConversationTurn[],
+): string[] {
+  return group.flatMap((entry) => {
+    const events = (entry.edits?.at(-1) ?? entry).events ?? []
+    return events.flatMap(
+      (event) =>
+        event.toolUseEvent?.artifacts
+          ?.filter((a) => a.type === Mojom.VISITED_LINKS_ARTIFACT_TYPE)
+          .flatMap((a) => {
+            try {
+              const parsed: unknown = JSON.parse(a.contentJson)
+              return Array.isArray(parsed)
+                ? parsed.filter((u): u is string => typeof u === 'string')
+                : []
+            } catch {
+              return []
+            }
+          }) ?? [],
+    )
+  })
+}

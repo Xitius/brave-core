@@ -219,5 +219,82 @@ describe('useExtractTaskData', () => {
 
       expect(result.current.allowedLinks).toHaveLength(0)
     })
+
+    it('should include URLs from visited_links artifacts', () => {
+      // Client-side tools (e.g. semantic history search) attach a
+      // visited_links artifact carrying a JSON array of HTTPS URLs. These
+      // belong in allowedLinks so the follow-up response's anchors render.
+      const assistantEntries: Mojom.ConversationTurn[] = [
+        createConversationTurnWithDefaults({
+          characterType: Mojom.CharacterType.ASSISTANT,
+          events: [
+            getToolUseEvent({
+              toolName: Mojom.SEMANTIC_HISTORY_SEARCH_TOOL_NAME,
+              id: '1',
+              argumentsJson: '{}',
+              output: [],
+              artifacts: [
+                {
+                  id: null,
+                  type: Mojom.VISITED_LINKS_ARTIFACT_TYPE,
+                  contentJson: JSON.stringify([
+                    'https://example.com/one',
+                    'https://example.com/two',
+                  ]),
+                },
+              ],
+            }),
+          ],
+        }),
+        createConversationTurnWithDefaults({
+          characterType: Mojom.CharacterType.ASSISTANT,
+          events: [getCompletionEvent('Here are the pages.')],
+        }),
+      ]
+
+      const { result } = renderHook(() => useExtractTaskData(assistantEntries))
+
+      expect(result.current.allowedLinks).toEqual([
+        'https://example.com/one',
+        'https://example.com/two',
+      ])
+    })
+
+    it('should union sources and visited_links URLs', () => {
+      const assistantEntries: Mojom.ConversationTurn[] = [
+        createConversationTurnWithDefaults({
+          characterType: Mojom.CharacterType.ASSISTANT,
+          events: [
+            getToolUseEvent({
+              toolName: Mojom.SEMANTIC_HISTORY_SEARCH_TOOL_NAME,
+              id: '1',
+              argumentsJson: '{}',
+              output: [],
+              artifacts: [
+                {
+                  id: null,
+                  type: Mojom.VISITED_LINKS_ARTIFACT_TYPE,
+                  contentJson: JSON.stringify(['https://history.example']),
+                },
+              ],
+            }),
+            getWebSourcesEvent([
+              {
+                url: { url: 'https://search.example' },
+                title: 'Search result',
+                faviconUrl: { url: 'https://search.example/favicon.ico' },
+              },
+            ]),
+            getCompletionEvent('Task'),
+          ],
+        }),
+      ]
+
+      const { result } = renderHook(() => useExtractTaskData(assistantEntries))
+
+      expect(result.current.allowedLinks).toHaveLength(2)
+      expect(result.current.allowedLinks).toContain('https://history.example')
+      expect(result.current.allowedLinks).toContain('https://search.example')
+    })
   })
 })
