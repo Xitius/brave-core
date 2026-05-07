@@ -684,13 +684,24 @@ void BraveBrowserViewTabbedLayoutImpl::UpdateMarginsForSideBar() {
 void BraveBrowserViewTabbedLayoutImpl::AdjustLayoutForFocusMode(
     ProposedLayout& layout) const {
   if (!delegate().IsFocusModeEnabled()) {
+    if (views().focus_mode_title_bar) {
+      layout.AddChild(views().focus_mode_title_bar, gfx::Rect());
+    }
+    return;
+  }
+
+  auto title_bar = views().focus_mode_title_bar;
+  if (!title_bar || !title_bar->GetVisible()) {
     return;
   }
 
   auto* contents_layout = layout.GetLayoutFor(views().contents_container);
   CHECK(contents_layout);
 
-  int content_top = 0;
+  int content_top = title_bar->GetPreferredSize().height();
+  const gfx::Rect browser_bounds = views().browser_view->GetLocalBounds();
+  layout.AddChild(title_bar,
+                  gfx::Rect(0, 0, browser_bounds.width(), content_top));
 
   if (delegate().IsInfobarVisible()) {
     auto* infobar_layout = layout.GetLayoutFor(views().infobar_container);
@@ -722,6 +733,11 @@ gfx::Insets BraveBrowserViewTabbedLayoutImpl::GetContentsMargins() const {
   auto contents_at_top_edge = [&]() {
     if (delegate().IsInfobarVisible()) {
       return false;
+    }
+    if (auto focus_mode_title_bar = views().focus_mode_title_bar) {
+      if (focus_mode_title_bar->GetVisible()) {
+        return false;
+      }
     }
     if (IsParentedTo(views().top_container, views().browser_view)) {
       if (delegate().ShouldDrawTabStrip() || delegate().IsToolbarVisible() ||

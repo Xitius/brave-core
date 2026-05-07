@@ -69,6 +69,7 @@ class BraveShieldsToolbarButton;
 class BraveHelpBubbleHostView;
 class BraveMultiContentsView;
 class ContentsLayoutManager;
+class FocusModeTitleBarView;
 class FocusModeTopOverlay;
 class SidebarContainerView;
 class SidePanelEntry;
@@ -91,6 +92,7 @@ class BraveBrowserView : public BrowserView,
   ~BraveBrowserView() override;
 
   static BraveBrowserView* From(BrowserView* view);
+  static const BraveBrowserView* From(const BrowserView* view);
 
   // We use rounded corners even rounded corners setting is disabled.
   // Call this when we want to know
@@ -259,7 +261,6 @@ class BraveBrowserView : public BrowserView,
   bool ShouldDrawTabStrokes() const override;
 
   void HandleBrowserWindowMouseEvent(const ui::MouseEvent& event);
-  bool IsBraveWebViewRoundedCornersEnabled();
   void UpdateContentsShadowVisibility();
   void StopTabCycling();
   void UpdateSearchTabsButtonState();
@@ -299,6 +300,7 @@ class BraveBrowserView : public BrowserView,
   raw_ptr<SidebarContainerView> sidebar_container_view_ = nullptr;
   raw_ptr<views::View> contents_background_view_ = nullptr;
   raw_ptr<views::View> vertical_tab_strip_host_view_ = nullptr;
+  raw_ptr<FocusModeTitleBarView> focus_mode_title_bar_view_ = nullptr;
   raw_ptr<FocusModeTopOverlay> focus_mode_top_overlay_ = nullptr;
   raw_ptr<VerticalTabStripWidgetDelegateView, DanglingUntriaged>
       vertical_tab_strip_widget_delegate_view_ = nullptr;

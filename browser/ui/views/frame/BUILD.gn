@@ -18,8 +18,8 @@ source_set("frame") {
 
   public_deps = [
     "//base",
-    "//components/tabs:public",
     "//brave/browser/ui/views/frame/edge_reveal",
+    "//components/tabs:public",
     "//ui/views",
   ]
 
