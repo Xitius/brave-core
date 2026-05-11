@@ -1208,7 +1208,11 @@ public class BraveNewTabPageLayout extends NewTabPageLayout
     private void setupSponsoredBackgroundContent(Wallpaper wallpaper) {
         if (mSponsoredRichMediaWebView == null) {
             mSponsoredRichMediaWebView =
-                    new SponsoredRichMediaWebView(mActivity, mWindowAndroid, mProfile);
+                    new SponsoredRichMediaWebView(
+                            mActivity,
+                            mWindowAndroid,
+                            mProfile,
+                            this::maybeResetSponsoredRichMediaBackground);
 
             mBackgroundSponsoredRichMediaView = findViewById(R.id.bg_sponsored_rich_media_view);
             mBackgroundSponsoredRichMediaView.setVisibility(View.VISIBLE);
@@ -1226,6 +1230,7 @@ public class BraveNewTabPageLayout extends NewTabPageLayout
 
         mBackgroundSponsoredRichMediaView.setVisibility(View.GONE);
         mBackgroundSponsoredRichMediaView.removeAllViews();
+        mSponsoredRichMediaWebView.destroy();
         mSponsoredRichMediaWebView = null;
     }
 
