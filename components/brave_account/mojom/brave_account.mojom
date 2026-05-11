@@ -62,7 +62,6 @@ enum RegisterClientErrorCode {
   kOpaqueError,
   kVerificationTokenEncryptionFailed,
   kVerificationTokenDecryptionFailed,
-  kNoRegistrationInProgress,
   kAuthenticationTokenEncryptionFailed,
 };
 
@@ -182,7 +181,6 @@ struct ResendConfirmationEmailResult {
 
 enum ResendConfirmationEmailClientErrorCode {
   kUnexpected,
-  kNoRegistrationInProgress,
   kVerificationTokenDecryptionFailed,
 };
 
@@ -237,9 +235,7 @@ struct GetServiceTokenResult {
 
 enum GetServiceTokenClientErrorCode {
   kUnexpected,
-  kUserNotLoggedIn,
   kAuthenticationTokenDecryptionFailed,
-  kAuthenticationSessionChanged,
   kServiceTokenEncryptionFailed,
 };
 
