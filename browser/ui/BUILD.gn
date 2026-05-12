@@ -1254,6 +1254,7 @@ source_set("ui") {
       deps += [
         "//brave/browser/extensions:component_loader",
         "//chrome/browser:flags",
+        "//extensions/browser:webstore_installer",
         "//third_party/widevine/cdm:buildflags",
       ]
 
