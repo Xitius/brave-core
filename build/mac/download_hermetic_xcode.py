@@ -34,13 +34,25 @@ sys.path.append(str(Path(__file__).resolve().parents[2] / 'script'))
 
 import deps  # pylint: disable=wrong-import-position
 
-# This contains binaries from Xcode 26.4 (17E202) along with the macOS 26.4 SDK
-# (25E251) and the Metal toolchain (17E188).
-XCODE_VERSION = '26.4.1'
+# The xcode version used for the hermetic toolchain.
+XCODE_VERSION = '26.5'
+XCODE_BUILD_VERSION = '17F42'
+
+# The SDK version used for the hermetic toolchain.
+MAC_SDK_OFFICIAL_VERSION = '26.5'
+MAC_SDK_OFFICIAL_BUILD_VERSION = '25F70'
+
+# The SDK used in Chromium upstream for this version.
+MAC_SDK_UPSTREAM_VERSION = '26.5'
+MAC_SDK_UPSTREAM_BUILD_VERSION = '25F70'
+
 XCODE_TOOLCHAIN_DOWNLOAD_URL = (
-    f'https://vhemnu34de4lf5cj6bx2wwshyy0egdxk.lambda-url.us-west-2.on.aws'
-    f'/xcode-hermetic-toolchain/xcode-hermetic-toolchain-{XCODE_VERSION}.tar.gz'
-)
+    'https://vhemnu34de4lf5cj6bx2wwshyy0egdxk.lambda-url.us-west-2.on.aws'
+    '/xcode-hermetic-toolchain/xcode-hermetic-toolchain-'
+    f'{XCODE_VERSION}-{XCODE_BUILD_VERSION}-{MAC_SDK_OFFICIAL_VERSION}-'
+    f'{MAC_SDK_OFFICIAL_BUILD_VERSION}-for-upstream-{MAC_SDK_UPSTREAM_VERSION}-'
+    f'{MAC_SDK_UPSTREAM_BUILD_VERSION}.tar.gz')
+
 
 # The toolchain will not be downloaded if the minimum OS version is not met. 19
 # is the Darwin major version number for macOS 10.15. Xcode 26.0 17A324 only
