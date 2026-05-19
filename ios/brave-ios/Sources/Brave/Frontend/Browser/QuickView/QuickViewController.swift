@@ -77,7 +77,8 @@ class QuickViewController: UIViewController {
       let shieldLevel = braveShieldsTabHelper.shieldLevel(for: url, considerAllShieldsOption: true)
       let ruleLists = await AdBlockGroupsManager.shared.ruleLists(
         isBraveShieldsEnabled: isBraveShieldsEnabled,
-        shieldLevel: shieldLevel
+        shieldLevel: shieldLevel,
+        isBlockAllCookiesEnabled: tab.profile.prefs.boolean(forPath: kBlockAllCookiesEnabled)
       )
       for ruleList in ruleLists {
         currentTab.configuration?.userContentController.add(ruleList)
