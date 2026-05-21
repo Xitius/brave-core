@@ -263,6 +263,13 @@ void BraveToolbarView::Init() {
       base::BindRepeating(&BraveToolbarView::OnLocationBarIsWideChanged,
                           base::Unretained(this)));
 
+  if (g_browser_process && g_browser_process->local_state()) {
+    compact_horizontal_tabs_.Init(
+        brave_tabs::kCompactHorizontalTabs, g_browser_process->local_state(),
+        base::BindRepeating(&BraveToolbarView::OnCompactModePrefChanged,
+                            base::Unretained(this)));
+  }
+
   if (tabs::utils::SupportsBraveVerticalTabs(browser_)) {
     show_vertical_tabs_.Init(brave_tabs::kVerticalTabsEnabled,
                              profile->GetPrefs(),
@@ -421,6 +428,11 @@ void BraveToolbarView::OnLocationBarIsWideChanged() {
 
   DeprecatedLayoutImmediately();
   SchedulePaint();
+}
+
+void BraveToolbarView::OnCompactModePrefChanged() {
+  PreferredSizeChanged();
+  InvalidateLayout();
 }
 
 void BraveToolbarView::OnThemeChanged() {
