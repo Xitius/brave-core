@@ -19,6 +19,7 @@ The tool gives more stable results on prepared hardware/OS to minimize jitter.
 import argparse
 import logging
 import shutil
+import subprocess
 import sys
 import os
 import tempfile
@@ -39,6 +40,44 @@ with path_util.SysPath(path_util.GetPyJson5Dir()):
   # pylint: disable=import-error # pytype: disable=import-error
   import json5
   # pylint: enable=import-error # pytype: enable=import-error
+
+
+# Override GOPROXY/GOROOT for the WPR `go build` invoked by telemetry: the
+# Windows perf workers persist bad values in their Go env file (empty GOPROXY,
+# and GOROOT=C:\Go which doesn't match the bundled toolchain). Without these
+# overrides module fetches fail with "GOPROXY list is not the empty string, but
+# contains no entries" and stdlib lookups fail with "package log/slog is not in
+# std (C:\Go\src\log\slog)".
+if sys.platform == 'win32':
+  os.environ['GOPROXY'] = 'https://proxy.golang.org,direct'
+  os.environ['GOROOT'] = os.path.join(path_util.GetSrcDir(), 'third_party',
+                                      'webpagereplay', 'third_party', 'golang',
+                                      'win', 'x64')
+
+
+def _log_go_env() -> None:
+  for var in ('GOPROXY', 'GOFLAGS', 'GOSUMDB', 'GONOSUMCHECK', 'GOPATH',
+              'GOMODCACHE'):
+    logging.info('os.environ[%s] = %r', var, os.environ.get(var))
+
+  if sys.platform == 'win32':
+    os_name, exe = 'win', 'go.exe'
+  elif sys.platform == 'darwin':
+    os_name, exe = 'mac', 'go'
+  else:
+    os_name, exe = 'linux', 'go'
+  go_exe = os.path.join(path_util.GetSrcDir(), 'third_party', 'webpagereplay',
+                        'third_party', 'golang', os_name, 'x64', 'bin', exe)
+  try:
+    out = subprocess.check_output([
+        go_exe, 'env', 'GOPROXY', 'GOFLAGS', 'GOSUMDB', 'GONOSUMCHECK',
+        'GOPATH', 'GOMODCACHE'
+    ],
+                                  text=True,
+                                  stderr=subprocess.STDOUT)
+    logging.info('go env:\n%s', out)
+  except (OSError, subprocess.CalledProcessError) as e:
+    logging.info('go env failed: %s', e)
 
 
 def load_config(options: CommonOptions) -> dict:
@@ -81,6 +120,9 @@ npm run perf_tests -- smoke-brave.json5 v1.58.45
   log_level = logging.DEBUG if options.verbose else logging.INFO
   log_format = '%(asctime)s: %(message)s'
   logging.basicConfig(level=log_level, format=log_format)
+
+  os.environ['GOPROXY'] = 'https://proxy.golang.org,direct'
+  _log_go_env()
 
   logging.info('Use working directory %s', options.working_directory)
   if options.ci_mode and os.path.exists(options.working_directory):
