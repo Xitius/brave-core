@@ -29,6 +29,10 @@ class TabTrackerService : public KeyedService, public mojom::TabTrackerService {
 
   void Bind(mojo::PendingReceiver<mojom::TabTrackerService> receiver);
 
+  // Returns the current set of tracked tabs for in-process callers. The list
+  // mirrors what is sent to mojom::TabDataObservers.
+  const std::vector<mojom::TabDataPtr>& GetTabs() const { return tabs_; }
+
   // mojom::TabTrackerService
   void AddObserver(
       mojo::PendingRemote<mojom::TabDataObserver> observer) override;

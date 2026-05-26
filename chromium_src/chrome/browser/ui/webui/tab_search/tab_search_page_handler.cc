@@ -6,13 +6,24 @@
 #include "chrome/browser/ui/webui/tab_search/tab_search_page_handler.h"
 
 #include "base/check.h"
+#include "base/containers/flat_map.h"
+#include "base/containers/flat_set.h"
+#include "base/functional/bind.h"
 #include "base/strings/string_number_conversions.h"
+#include "brave/browser/ai_chat/tab_tracker_service_factory.h"
+#include "brave/components/ai_chat/core/browser/tab_tracker_service.h"
 #include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
+#include "brave/components/ai_chat/core/common/mojom/tab_tracker.mojom.h"
+#include "chrome/browser/history_embeddings/history_embeddings_service_factory.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/grit/brave_components_strings.h"
+#include "components/history/core/browser/history_types.h"
+#include "components/history_embeddings/content/history_embeddings_service.h"
+#include "components/history_embeddings/core/history_embeddings_search.h"
 #include "components/sessions/core/session_id.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/page_transition_types.h"
@@ -294,6 +305,83 @@ void TabSearchPageHandler::GetTabFocusShowFRE(
   std::move(callback).Run(!Profile::FromWebUI(web_ui_)->GetPrefs()->HasPrefPath(
       ai_chat::prefs::kBraveAIChatTabOrganizationEnabled));
 }
+
+void TabSearchPageHandler::SearchTabsByContent(
+    const std::string& query,
+    SearchTabsByContentCallback callback) {
+  Profile* profile = Profile::FromWebUI(web_ui_);
+
+  // Build url_id -> tab_id map from TabTrackerService, which caches url_id
+  // alongside each tab via TabDataWebContentsObserver on navigation. Tabs
+  // with url_id == 0 are either un-indexed yet or not in history; they
+  // wouldn't match anything content-wise so we skip them.
+  auto* tab_tracker =
+      ai_chat::TabTrackerServiceFactory::GetForBrowserContext(profile);
+  base::flat_map<history::URLID, int32_t> tab_id_by_url_id;
+  if (tab_tracker) {
+    for (const auto& tab : tab_tracker->GetTabs()) {
+      if (!tab || !tab->url.SchemeIsHTTPOrHTTPS() || tab->url_id == 0) {
+        continue;
+      }
+      tab_id_by_url_id.emplace(tab->url_id, tab->id);
+    }
+  }
+
+  auto* embeddings_service =
+      HistoryEmbeddingsServiceFactory::GetForProfile(profile);
+  if (query.empty() || tab_id_by_url_id.empty() || !embeddings_service) {
+    std::move(callback).Run({});
+    return;
+  }
+
+  // Cap on Search() rows so the URL filter has headroom (the SQL filter on
+  // url_id already restricts to the open-tab set, but Search applies score
+  // threshold + word-match filtering which may further narrow). Cap on
+  // returned tab_ids so a single low-confidence match doesn't drown the
+  // user's intended tab.
+  constexpr size_t kSearchCount = 100;
+  constexpr size_t kMaxSemanticResults = 5;
+
+  base::flat_set<history::URLID> url_id_filter;
+  url_id_filter.reserve(tab_id_by_url_id.size());
+  for (const auto& [url_id, tab_id] : tab_id_by_url_id) {
+    url_id_filter.insert(url_id);
+  }
+
+  struct State {
+    base::flat_map<history::URLID, int32_t> tab_id_by_url_id;
+    SearchTabsByContentCallback callback;
+    bool responded = false;
+  };
+  auto state = std::make_unique<State>();
+  state->tab_id_by_url_id = std::move(tab_id_by_url_id);
+  state->callback = std::move(callback);
+
+  embeddings_service->SearchWithUrlIdFilter(
+      /*previous_search_result=*/nullptr, query,
+      /*time_range_start=*/std::nullopt, kSearchCount,
+      /*skip_answering=*/true, std::move(url_id_filter),
+      base::BindRepeating(
+          [](State* state, history_embeddings::SearchResult result) {
+            if (state->responded) {
+              return;
+            }
+            state->responded = true;
+            std::vector<int32_t> tab_ids;
+            for (const auto& row : result.scored_url_rows) {
+              if (tab_ids.size() >= kMaxSemanticResults) {
+                break;
+              }
+              auto it = state->tab_id_by_url_id.find(row.scored_url.url_id);
+              if (it == state->tab_id_by_url_id.end()) {
+                continue;
+              }
+              tab_ids.push_back(it->second);
+            }
+            std::move(state->callback).Run(std::move(tab_ids));
+          },
+          base::Owned(std::move(state))));
+}
 #else   // !BUILDFLAG(ENABLE_AI_CHAT)
 // Stub implementations when AI Chat is disabled
 void TabSearchPageHandler::GetSuggestedTopics(
@@ -319,5 +407,11 @@ void TabSearchPageHandler::SetTabFocusEnabled() {}
 void TabSearchPageHandler::GetTabFocusShowFRE(
     GetTabFocusShowFRECallback callback) {
   std::move(callback).Run(false);
+}
+
+void TabSearchPageHandler::SearchTabsByContent(
+    const std::string& query,
+    SearchTabsByContentCallback callback) {
+  std::move(callback).Run({});
 }
 #endif  // BUILDFLAG(ENABLE_AI_CHAT)

@@ -71,6 +71,8 @@ class TabSearchPageHandler : public TabSearchPageHandler_ChromiumImpl {
 
   void SetTabFocusEnabled() override;
   void GetTabFocusShowFRE(GetTabFocusShowFRECallback callback) override;
+  void SearchTabsByContent(const std::string& query,
+                           SearchTabsByContentCallback callback) override;
 
 #if BUILDFLAG(ENABLE_AI_CHAT)
   void SetOriginalTabsInfoByWindowForTesting(

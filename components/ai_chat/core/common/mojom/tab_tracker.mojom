@@ -20,6 +20,13 @@ struct TabData {
 
     string title;
     url.mojom.Url url;
+
+    // The HistoryService URLID for `url` if the URL has been indexed in
+    // history, or 0 otherwise. Populated lazily by TabDataWebContentsObserver
+    // when the tab navigates; used by semantic search to filter
+    // HistoryEmbeddings results to the currently-open tab set without a
+    // per-search async URL→URLID resolution step.
+    int64 url_id;
 };
 
 interface TabDataObserver {

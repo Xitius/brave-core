@@ -1,0 +1,50 @@
+diff --git a/chrome/browser/resources/tab_search/tab_search_page.ts b/chrome/browser/resources/tab_search/tab_search_page.ts
+index 25d4956d02458fb56b74bab46ef64fdbe7f2a3ce..02098b32aae2818c73ffa12f9fb29a4c5871238e 100644
+--- a/chrome/browser/resources/tab_search/tab_search_page.ts
++++ b/chrome/browser/resources/tab_search/tab_search_page.ts
+@@ -154,6 +154,9 @@ export class TabSearchPageElement extends TabSearchSearchFieldBase {
+   private filteredOpenHeaderIndices_: number[] = [];
+   private initiallySelectedIndex_: number = NO_SELECTION;
+   private documentVisibilityChangedListener_: () => void;
++  // Brave: monotonic counter used to discard stale semantic-search responses
++  // when the user types faster than the on-device ranker can complete.
++  private semanticSearchToken_: number = 0;
+ 
+   constructor() {
+     super();
+@@ -702,6 +705,35 @@ export class TabSearchPageElement extends TabSearchSearchFieldBase {
+     let filteredOpenTabs =
+         search<TabData>(this.searchText_, this.openTabs_, this.searchOptions_);
+ 
++    // Brave: augment the exact-match results with on-device semantic ranking
++    // over indexed tab content. `searchTabsByContent` returns tab_ids ordered
++    // most-relevant first; we append matches that the exact matcher missed.
++    // Falls back silently when the Brave extension isn't exposed (e.g.
++    // upstream tests) or when no semantic matches are available.
++    if (this.searchText_.length > 0) {
++      const braveProxy = this.apiProxy_ as unknown as {
++        searchTabsByContent?:
++            (query: string) => Promise<{tabIds: number[]}>,
++      };
++      if (braveProxy.searchTabsByContent) {
++        const token = ++this.semanticSearchToken_;
++        try {
++          const {tabIds} = await braveProxy.searchTabsByContent(
++              this.searchText_);
++          if (token === this.semanticSearchToken_) {
++            const present =
++                new Set<number>(filteredOpenTabs.map(d => (d.tab as Tab).tabId));
++            const semanticMatches = tabIds
++                .map(id => this.openTabs_.find(d => (d.tab as Tab).tabId === id))
++                .filter((d): d is TabData => !!d && !present.has(
++                    (d.tab as Tab).tabId));
++            filteredOpenTabs = filteredOpenTabs.concat(semanticMatches);
++          }
++        } catch {
++          // Ignore semantic search errors; the exact-match results stand.
++        }
++      }
++    }
+     // The MRU tab that is not the active tab is either the first tab in the
+     // Audio and Video section (if it exists) or the first tab in the Open Tabs
+     // section.
