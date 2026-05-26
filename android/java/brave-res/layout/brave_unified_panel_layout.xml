@@ -12,7 +12,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/unified_panel_background"
-    android:outlineProvider="background">
+    android:outlineProvider="background"
+    android:elevation="@dimen/app_menu_elevation">
 
     <!-- Main Panel Content -->
     <ScrollView
