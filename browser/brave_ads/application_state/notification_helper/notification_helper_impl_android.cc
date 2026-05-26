@@ -5,12 +5,12 @@
 
 #include "brave/browser/brave_ads/application_state/notification_helper/notification_helper_impl_android.h"
 
+#include "base/android/application_status_listener.h"
 #include "base/android/jni_string.h"
 #include "base/system/sys_info.h"
 #include "brave/browser/brave_ads/android/jni_headers/BraveAdsSignupDialog_jni.h"
 #include "brave/browser/brave_ads/android/jni_headers/BraveAds_jni.h"
 #include "brave/build/android/jni_headers/BraveSiteChannelsManagerBridge_jni.h"
-#include "brave/components/brave_ads/browser/application_state/application_state_monitor.h"
 #include "chrome/browser/notifications/jni_headers/NotificationSystemStatusUtil_jni.h"
 #include "chrome/browser/notifications/notification_channels_provider_android.h"
 
@@ -69,7 +69,8 @@ bool NotificationHelperImplAndroid::CanShowNotifications() {
        status == kAppNotificationStatusUndeterminable);
 
   const bool is_foreground =
-      ApplicationStateMonitor::GetInstance()->IsBrowserActive();
+      base::android::ApplicationStatusListener::GetState() ==
+      base::android::APPLICATION_STATE_HAS_RUNNING_ACTIVITIES;
 
   const bool is_notification_channel_enabled =
       IsBraveAdsNotificationChannelEnabled(is_foreground);
