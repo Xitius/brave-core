@@ -26,6 +26,7 @@
 #include "chrome/browser/pdf/pdf_pref_names.h"
 #include "chrome/browser/printing/print_compositor_util.h"
 #include "chrome/browser/printing/print_preview_data_service.h"
+#include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/printing/printing_service.h"
 #include "chrome/browser/profiles/profile.h"
@@ -254,6 +255,10 @@ void PrintPreviewExtractorInternal::CreatePrintPreview() {
     auto url = web_contents_->GetLastCommittedURL();
     settings.Set(printing::kSettingHeaderFooterURL, url.spec());
     OnPrintPreviewRequest(preview_request_id_);
+    if (auto* manager =
+            printing::PrintViewManager::FromWebContents(web_contents_)) {
+      manager->AppendPrintPreviewSettings(settings.Clone(), is_pdf_);
+    }
     print_render_frame_->PrintPreview(std::move(settings));
   }
 }
