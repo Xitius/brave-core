@@ -1,0 +1,13 @@
+diff --git a/components/history_embeddings/core/vector_database.cc b/components/history_embeddings/core/vector_database.cc
+index 8a1171a45e603ef482d64dc661658db1d01e96b5..25253e82a172c884a1642a1ad5cb2e350f6f92f9 100644
+--- a/components/history_embeddings/core/vector_database.cc
++++ b/components/history_embeddings/core/vector_database.cc
+@@ -262,7 +262,7 @@ SearchInfo VectorDatabase::FindNearest(
+   }
+ 
+   std::unique_ptr<UrlDataIterator> iterator =
+-      MakeUrlDataIterator(time_range_start);
++      MakeUrlDataIterator(time_range_start, search_params.url_id_filter);
+   if (!iterator) {
+     return {};
+   }
