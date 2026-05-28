@@ -1558,6 +1558,8 @@ const string kPolkadotMainnet = "polkadot_mainnet";
 
 const string kPolkadotTestnet = "polkadot_testnet";
 
+const string kPolkadotPaseoAssetHub = "paseo_asset_hub";
+
 // End of polkadot chains.
 const string kArbitrumNovaChainId = "0xa4ba";
 

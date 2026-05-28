@@ -494,7 +494,8 @@ std::vector<mojom::KeyringId> GetSupportedKeyringsForKnownNetwork(
         return {mojom::KeyringId::kPolkadotMainnet,
                 mojom::KeyringId::kPolkadotImport};
       }
-      if (chain_id == mojom::kPolkadotTestnet) {
+      if (chain_id == mojom::kPolkadotTestnet ||
+          chain_id == mojom::kPolkadotPaseoAssetHub) {
         return {mojom::KeyringId::kPolkadotTestnet,
                 mojom::KeyringId::kPolkadotImportTestnet};
       }
