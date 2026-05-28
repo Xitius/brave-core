@@ -14,6 +14,7 @@
 #include "brave/components/brave_account/brave_account_service_constants.h"
 #include "brave/components/brave_account/brave_account_utils.h"
 #include "brave/components/brave_account/endpoint_client/with_headers.h"
+#include "brave/components/brave_account/endpoints/verify_init.h"
 #include "brave/components/brave_account/state_internal.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 
@@ -26,6 +27,7 @@ using endpoints::LoginInit;
 using endpoints::PasswordFinalize;
 using endpoints::PasswordInit;
 using endpoints::VerifyComplete;
+using endpoints::VerifyInit;
 using internal::MakeClientError;
 using internal::MakeRequest;
 using internal::MakeServerError;
@@ -126,6 +128,108 @@ void LoggedOutState::CancelVerificationLoggedOut(
 
   // LoggedOutWithVerification ==> LoggedOut (no state swap)
   account_state_prefs_->SetLoggedOut();
+}
+
+void LoggedOutState::RequestPasswordReset(
+    mojom::Service initiating_service,
+    const std::string& email,
+    RequestPasswordResetCallback callback) {
+  CHECK(!email.empty());
+
+  auto request = MakeRequest<VerifyInit::Request>();
+  request.body.email = email;
+  request.body.intent = "reset_password";
+  // Server side will determine locale based on the Accept-Language request
+  // header (which is included automatically by upstream).
+  request.body.locale = "";
+  request.body.service = kServiceToString.at(initiating_service);
+
+  SendStateOwnedRequest<VerifyInit>(
+      std::move(request),
+      base::BindOnce(&LoggedOutState::OnRequestPasswordReset,
+                     weak_factory_.GetWeakPtr(), std::move(callback)));
+}
+
+void LoggedOutState::ResetPasswordVerify(const std::string& code,
+                                         ResetPasswordVerifyCallback callback) {
+  CHECK(!code.empty());
+
+  const auto encrypted_verification_token =
+      account_state_prefs_->GetVerificationToken(
+          mojom::VerificationIntent::NewLoggedOutIntent(
+              mojom::LoggedOutVerificationIntent::kResetPassword));
+  CHECK(!encrypted_verification_token.empty());
+  const auto verification_token = Decrypt(encrypted_verification_token);
+  if (verification_token.empty()) {
+    return std::move(callback).Run(
+        base::unexpected(MakeClientError<mojom::ResetPasswordError>(
+            mojom::ResetPasswordClientErrorCode::
+                kVerificationTokenDecryptionFailed)));
+  }
+
+  auto request = MakeRequest<WithHeaders<VerifyComplete::Request>>();
+  SetBearerToken(request, verification_token);
+  request.body.code = code;
+
+  SendStateOwnedRequest<VerifyComplete>(
+      std::move(request),
+      base::BindOnce(&LoggedOutState::OnResetPasswordVerify,
+                     weak_factory_.GetWeakPtr(), std::move(callback)));
+}
+
+void LoggedOutState::ResetPasswordInitialize(
+    const std::string& blinded_message,
+    ResetPasswordInitializeCallback callback) {
+  CHECK(!blinded_message.empty());
+
+  const auto encrypted_verification_token =
+      account_state_prefs_->GetVerificationToken(
+          mojom::VerificationIntent::NewLoggedOutIntent(
+              mojom::LoggedOutVerificationIntent::kResetPassword));
+  CHECK(!encrypted_verification_token.empty());
+  const auto verification_token = Decrypt(encrypted_verification_token);
+  if (verification_token.empty()) {
+    return std::move(callback).Run(
+        base::unexpected(MakeClientError<mojom::ResetPasswordError>(
+            mojom::ResetPasswordClientErrorCode::
+                kVerificationTokenDecryptionFailed)));
+  }
+
+  auto request = MakeRequest<WithHeaders<PasswordInit::Request>>();
+  SetBearerToken(request, verification_token);
+  request.body.blinded_message = blinded_message;
+  request.body.serialize_response = true;
+
+  SendStateOwnedRequest<PasswordInit>(
+      std::move(request),
+      base::BindOnce(&LoggedOutState::OnResetPasswordInitialize,
+                     weak_factory_.GetWeakPtr(), std::move(callback)));
+}
+
+void LoggedOutState::ResetPasswordFinalize(
+    const std::string& encrypted_verification_token,
+    const std::string& serialized_record,
+    ResetPasswordFinalizeCallback callback) {
+  CHECK(!encrypted_verification_token.empty());
+  CHECK(!serialized_record.empty());
+
+  const std::string verification_token = Decrypt(encrypted_verification_token);
+  if (verification_token.empty()) {
+    return std::move(callback).Run(
+        base::unexpected(MakeClientError<mojom::ResetPasswordError>(
+            mojom::ResetPasswordClientErrorCode::
+                kVerificationTokenDecryptionFailed)));
+  }
+
+  auto request = MakeRequest<WithHeaders<PasswordFinalize::Request>>();
+  SetBearerToken(request, verification_token);
+  request.body.serialized_record = serialized_record;
+
+  SendStateOwnedRequest<PasswordFinalize>(
+      std::move(request),
+      base::BindOnce(&LoggedOutState::OnResetPasswordFinalize,
+                     weak_factory_.GetWeakPtr(), std::move(callback),
+                     encrypted_verification_token));
 }
 
 void LoggedOutState::LoginInitialize(mojom::Service initiating_service,
@@ -302,6 +406,202 @@ void LoggedOutState::OnRegisterVerify(RegisterVerifyCallback callback,
             email = std::move(success_body.email);
 
             return mojom::RegisterVerifyResult::New();
+          });
+
+  // See `StateBase`'s class comment on ordering.
+  // LoggedOutWithVerification ==> LoggedIn (state swap).
+  const bool success = result.has_value();
+  std::move(callback).Run(std::move(result));
+
+  if (success) {
+    CHECK(!email.empty());
+    CHECK(!encrypted_authentication_token.empty());
+    account_state_prefs_->SetLoggedIn(email, encrypted_authentication_token);
+  }
+}
+
+void LoggedOutState::OnRequestPasswordReset(
+    RequestPasswordResetCallback callback,
+    VerifyInit::Response response) {
+  if (!response.body) {
+    return std::move(callback).Run(
+        base::unexpected(MakeServerError<mojom::ResetPasswordError>(
+            response.status_code.value_or(response.net_error),
+            mojom::ResetPasswordServerErrorCode::kInvalidResponse)));
+  }
+
+  const auto status_code = CHECK_DEREF(response.status_code);
+
+  std::string encrypted_verification_token;
+
+  auto result =
+      std::move(*response.body)
+          // expected<SuccessBody, [ErrorBody            ]> ==>
+          // expected<SuccessBody, [ResetPasswordErrorPtr]>
+          .transform_error([&](auto error_body) {
+            return MakeServerError<mojom::ResetPasswordError>(
+                status_code, std::move(error_body));
+          })
+          // expected<[SuccessBody                  ], ResetPasswordErrorPtr>
+          // ==>
+          // expected<[RequestPasswordResetResultPtr], ResetPasswordErrorPtr>
+          .and_then([&](auto success_body)
+                        -> base::expected<mojom::RequestPasswordResetResultPtr,
+                                          mojom::ResetPasswordErrorPtr> {
+            if (success_body.verification_token.empty()) {
+              return base::unexpected(
+                  MakeServerError<mojom::ResetPasswordError>(
+                      status_code,
+                      mojom::ResetPasswordServerErrorCode::kInvalidResponse));
+            }
+
+            if (encrypted_verification_token =
+                    Encrypt(success_body.verification_token);
+                encrypted_verification_token.empty()) {
+              return base::unexpected(
+                  MakeClientError<mojom::ResetPasswordError>(
+                      mojom::ResetPasswordClientErrorCode::
+                          kVerificationTokenEncryptionFailed));
+            }
+
+            return mojom::RequestPasswordResetResult::New();
+          });
+
+  // See `StateBase`'s class comment on ordering.
+  // LoggedOut ==> LoggedOutWithVerification (no state swap).
+  const bool success = result.has_value();
+  std::move(callback).Run(std::move(result));
+
+  if (success) {
+    CHECK(!encrypted_verification_token.empty());
+    account_state_prefs_->SetLoggedOutWithVerification(
+        encrypted_verification_token,
+        mojom::LoggedOutVerificationIntent::kResetPassword);
+  }
+}
+
+void LoggedOutState::OnResetPasswordVerify(ResetPasswordVerifyCallback callback,
+                                           VerifyComplete::Response response) {
+  if (!response.body) {
+    return std::move(callback).Run(
+        base::unexpected(MakeServerError<mojom::ResetPasswordError>(
+            response.status_code.value_or(response.net_error),
+            mojom::ResetPasswordServerErrorCode::kInvalidResponse)));
+  }
+
+  const auto status_code = CHECK_DEREF(response.status_code);
+
+  // Unlike registration, password-reset's verify step does not produce an
+  // auth token: the server returns `"authToken": null` on success, since the
+  // user still needs to set a new password before they can be considered
+  // logged in. We treat any non-error response as success and stay in
+  // LoggedOutWithVerification.
+  auto result =
+      std::move(*response.body)
+          .transform_error([&](auto error_body) {
+            return MakeServerError<mojom::ResetPasswordError>(
+                status_code, std::move(error_body));
+          })
+          .and_then(
+              [](auto) -> base::expected<mojom::ResetPasswordVerifyResultPtr,
+                                         mojom::ResetPasswordErrorPtr> {
+                return mojom::ResetPasswordVerifyResult::New();
+              });
+
+  std::move(callback).Run(std::move(result));
+}
+
+void LoggedOutState::OnResetPasswordInitialize(
+    ResetPasswordInitializeCallback callback,
+    PasswordInit::Response response) {
+  if (!response.body) {
+    return std::move(callback).Run(
+        base::unexpected(MakeServerError<mojom::ResetPasswordError>(
+            response.status_code.value_or(response.net_error),
+            mojom::ResetPasswordServerErrorCode::kInvalidResponse)));
+  }
+
+  const auto status_code = CHECK_DEREF(response.status_code);
+
+  auto result =
+      std::move(*response.body)
+          .transform_error([&](auto error_body) {
+            return MakeServerError<mojom::ResetPasswordError>(
+                status_code, std::move(error_body));
+          })
+          .and_then(
+              [&](auto success_body)
+                  -> base::expected<mojom::ResetPasswordInitializeResultPtr,
+                                    mojom::ResetPasswordErrorPtr> {
+                if (success_body.verification_token.empty() ||
+                    success_body.serialized_response.empty()) {
+                  return base::unexpected(MakeServerError<
+                                          mojom::ResetPasswordError>(
+                      status_code,
+                      mojom::ResetPasswordServerErrorCode::kInvalidResponse));
+                }
+
+                std::string encrypted_verification_token =
+                    Encrypt(success_body.verification_token);
+                if (encrypted_verification_token.empty()) {
+                  return base::unexpected(
+                      MakeClientError<mojom::ResetPasswordError>(
+                          mojom::ResetPasswordClientErrorCode::
+                              kVerificationTokenEncryptionFailed));
+                }
+
+                return mojom::ResetPasswordInitializeResult::New(
+                    std::move(encrypted_verification_token),
+                    std::move(success_body.serialized_response));
+              });
+
+  std::move(callback).Run(std::move(result));
+}
+
+void LoggedOutState::OnResetPasswordFinalize(
+    ResetPasswordFinalizeCallback callback,
+    const std::string& encrypted_verification_token,
+    PasswordFinalize::Response response) {
+  if (!response.body) {
+    return std::move(callback).Run(
+        base::unexpected(MakeServerError<mojom::ResetPasswordError>(
+            response.status_code.value_or(response.net_error),
+            mojom::ResetPasswordServerErrorCode::kInvalidResponse)));
+  }
+
+  const auto status_code = CHECK_DEREF(response.status_code);
+
+  std::string email;
+  std::string encrypted_authentication_token;
+
+  auto result =
+      std::move(*response.body)
+          .transform_error([&](auto error_body) {
+            return MakeServerError<mojom::ResetPasswordError>(
+                status_code, std::move(error_body));
+          })
+          .and_then([&](auto success_body)
+                        -> base::expected<mojom::ResetPasswordFinalizeResultPtr,
+                                          mojom::ResetPasswordErrorPtr> {
+            if (success_body.auth_token.empty() || success_body.email.empty()) {
+              return base::unexpected(
+                  MakeServerError<mojom::ResetPasswordError>(
+                      status_code,
+                      mojom::ResetPasswordServerErrorCode::kInvalidResponse));
+            }
+
+            if (encrypted_authentication_token =
+                    Encrypt(success_body.auth_token);
+                encrypted_authentication_token.empty()) {
+              return base::unexpected(
+                  MakeClientError<mojom::ResetPasswordError>(
+                      mojom::ResetPasswordClientErrorCode::
+                          kAuthenticationTokenEncryptionFailed));
+            }
+
+            email = std::move(success_body.email);
+
+            return mojom::ResetPasswordFinalizeResult::New();
           });
 
   // See `StateBase`'s class comment on ordering.

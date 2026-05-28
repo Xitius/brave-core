@@ -6,6 +6,7 @@
 #include "brave/components/brave_account/endpoints/password_finalize.h"
 
 #include <optional>
+#include <tuple>
 
 #include "base/no_destructor.h"
 #include "base/types/expected.h"
@@ -16,9 +17,10 @@
 
 namespace brave_account::endpoints {
 
-bool operator==(const PasswordFinalize::Response::SuccessBody&,
-                const PasswordFinalize::Response::SuccessBody&) {
-  return true;
+bool operator==(const PasswordFinalize::Response::SuccessBody& lhs,
+                const PasswordFinalize::Response::SuccessBody& rhs) {
+  return std::tie(lhs.auth_token, lhs.email) ==
+         std::tie(rhs.auth_token, rhs.email);
 }
 
 namespace {
@@ -29,14 +31,18 @@ const PasswordFinalizeTestCase* Success() {
   static const base::NoDestructor<PasswordFinalizeTestCase> kSuccess(
       {.test_name = "success",
        .http_status_code = net::HTTP_OK,
-       .raw_response_body = R"({ "authToken": null,
+       .raw_response_body = R"({ "authToken": "34c375d933e3c",
+                                 "email": "email",
                                  "requiresEmailVerification": true,
                                  "requiresTwoFA": false,
                                  "sessionsInvalidated": false })",
        .expected_response = {
-           .net_error = net::OK,
-           .status_code = net::HTTP_OK,
-           .body = PasswordFinalize::Response::SuccessBody()}});
+           .net_error = net::OK, .status_code = net::HTTP_OK, .body = [] {
+             PasswordFinalize::Response::SuccessBody body;
+             body.auth_token = "34c375d933e3c";
+             body.email = "email";
+             return body;
+           }()}});
   return kSuccess.get();
 }
 

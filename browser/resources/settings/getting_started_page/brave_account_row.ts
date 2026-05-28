@@ -18,6 +18,7 @@ import { BraveAccountSettingsStrings } from '../brave_components_webui_strings.j
 import {
   AccountState,
   AccountStateFieldTags,
+  LoggedOutVerificationIntent,
   ResendConfirmationEmailClientErrorCode,
   ResendConfirmationEmailError,
   ResendConfirmationEmailErrorFieldTags,
@@ -156,6 +157,34 @@ export class SettingsBraveAccountRowElement extends I18nMixinLit(CrLitElement) {
 
   protected openBraveAccountDialog() {
     this.browserProxy.rowHandler.openDialog(this.initiatingServiceName)
+  }
+
+  protected getVerificationLabels(intent: LoggedOutVerificationIntent) {
+    return intent === LoggedOutVerificationIntent.kResetPassword
+      ? {
+          title: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_RESET_PASSWORD_ROW_TITLE,
+          description1: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_RESET_PASSWORD_ROW_DESCRIPTION_1,
+          description2: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_RESET_PASSWORD_ROW_DESCRIPTION_2,
+          enterCodeLabel: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_ENTER_RESET_CODE_BUTTON_LABEL,
+          cancelLabel: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_CANCEL_RESET_PASSWORD_BUTTON_LABEL,
+        }
+      : {
+          title: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_TITLE,
+          description1: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_1,
+          description2: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_2,
+          enterCodeLabel: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_ENTER_REGISTRATION_CODE_BUTTON_LABEL,
+          cancelLabel: BraveAccountSettingsStrings
+              .SETTINGS_BRAVE_ACCOUNT_CANCEL_REGISTRATION_BUTTON_LABEL,
+        }
   }
 
   private getErrorMessage(error: ResendConfirmationEmailError): string {

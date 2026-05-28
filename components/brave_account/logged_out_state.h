@@ -16,6 +16,7 @@
 #include "brave/components/brave_account/endpoints/password_finalize.h"
 #include "brave/components/brave_account/endpoints/password_init.h"
 #include "brave/components/brave_account/endpoints/verify_complete.h"
+#include "brave/components/brave_account/endpoints/verify_init.h"
 #include "brave/components/brave_account/mojom/brave_account.mojom.h"
 #include "brave/components/brave_account/state_base.h"
 #include "components/os_crypt/async/common/encryptor.h"
@@ -64,6 +65,21 @@ class LoggedOutState : public StateBase {
   void CancelVerificationLoggedOut(
       mojom::LoggedOutVerificationIntent intent) override;
 
+  void RequestPasswordReset(mojom::Service initiating_service,
+                            const std::string& email,
+                            RequestPasswordResetCallback callback) override;
+
+  void ResetPasswordVerify(const std::string& code,
+                           ResetPasswordVerifyCallback callback) override;
+
+  void ResetPasswordInitialize(
+      const std::string& blinded_message,
+      ResetPasswordInitializeCallback callback) override;
+
+  void ResetPasswordFinalize(const std::string& encrypted_verification_token,
+                             const std::string& serialized_record,
+                             ResetPasswordFinalizeCallback callback) override;
+
   void LoginInitialize(mojom::Service initiating_service,
                        const std::string& email,
                        const std::string& serialized_ke1,
@@ -83,6 +99,18 @@ class LoggedOutState : public StateBase {
   void OnRegisterVerify(RegisterVerifyCallback callback,
                         endpoints::VerifyComplete::Response response);
 
+  void OnRequestPasswordReset(RequestPasswordResetCallback callback,
+                              endpoints::VerifyInit::Response response);
+
+  void OnResetPasswordVerify(ResetPasswordVerifyCallback callback,
+                             endpoints::VerifyComplete::Response response);
+
+  void OnResetPasswordInitialize(ResetPasswordInitializeCallback callback,
+                                 endpoints::PasswordInit::Response response);
+
+  void OnResetPasswordFinalize(ResetPasswordFinalizeCallback callback,
+                               const std::string& encrypted_verification_token,
+                               endpoints::PasswordFinalize::Response response);
 
   void OnLoginInitialize(LoginInitializeCallback callback,
                          endpoints::LoginInit::Response response);

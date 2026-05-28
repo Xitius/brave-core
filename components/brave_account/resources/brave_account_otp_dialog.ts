@@ -18,6 +18,8 @@ import {
   RegisterError,
   ResendConfirmationEmailClientErrorCode,
   ResendConfirmationEmailError,
+  ResetPasswordClientErrorCode,
+  ResetPasswordError,
 } from './brave_account.mojom-webui.js'
 
 export class BraveAccountOtpDialogElement extends CrLitElement {
@@ -32,12 +34,21 @@ export class BraveAccountOtpDialogElement extends CrLitElement {
   static override get properties() {
     return {
       code: { type: String },
+      intent: { type: Number },
       isCodeValid: { type: Boolean },
       isResendingConfirmationEmail: { type: Boolean, state: true },
     }
   }
 
   protected async onConfirmCodeButtonClicked() {
+    if (this.intent === LoggedOutVerificationIntent.kResetPassword) {
+      await this.confirmResetPasswordCode()
+    } else {
+      await this.confirmRegistrationCode()
+    }
+  }
+
+  private async confirmRegistrationCode() {
     try {
       await this.browserProxy.authentication.registerVerify(this.code)
     } catch (e) {
@@ -56,15 +67,41 @@ export class BraveAccountOtpDialogElement extends CrLitElement {
     }
   }
 
+  private async confirmResetPasswordCode() {
+    try {
+      await this.browserProxy.authentication.resetPasswordVerify(this.code)
+      this.fire('reset-password-verified')
+    } catch (e) {
+      let error: ResetPasswordError
+
+      if (e && typeof e === 'object') {
+        error = e as ResetPasswordError
+      } else {
+        console.error('Unexpected error:', e)
+        error = {
+          clientError: { errorCode: ResetPasswordClientErrorCode.kUnexpected },
+        }
+      }
+
+      showError({ kind: 'resetPassword', details: error })
+    }
+  }
+
   protected async onResendEmailCodeButtonClicked() {
     if (this.isResendingConfirmationEmail) return
     this.isResendingConfirmationEmail = true
 
+    await this.resendConfirmationEmail(this.intent)
+
+    this.isResendingConfirmationEmail = false
+  }
+
+  private async resendConfirmationEmail(intent: LoggedOutVerificationIntent) {
     let error: ResendConfirmationEmailError | undefined
 
     try {
       await this.browserProxy.authentication.resendConfirmationEmailLoggedOut(
-        LoggedOutVerificationIntent.kRegistration,
+        intent,
       )
     } catch (e) {
       if (e && typeof e === 'object') {
@@ -90,12 +127,13 @@ export class BraveAccountOtpDialogElement extends CrLitElement {
         BraveAccountStrings.BRAVE_ACCOUNT_RESEND_CONFIRMATION_EMAIL_SUCCESS_TITLE,
       )
     }
-
-    this.isResendingConfirmationEmail = false
   }
 
   private browserProxy: BraveAccountBrowserProxy =
     BraveAccountBrowserProxyImpl.getInstance()
+
+  accessor intent: LoggedOutVerificationIntent =
+    LoggedOutVerificationIntent.kRegistration
 
   protected accessor code = ''
   protected accessor isCodeValid = false

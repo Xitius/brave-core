@@ -49,17 +49,18 @@ export function getHtml(this: SettingsBraveAccountRowElement) {
               </div>
               <div class="title-and-description">
                 <div class="title">
-                  ${this.i18n(
-                      BraveAccountSettingsStrings
-                           .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_TITLE)}
+                  ${this.i18n(this.getVerificationLabels(
+                      this.state.loggedOut!.verification.intent).title)}
                 </div>
                 <div class="description">
                   <localized-link
                       .localizedString=${`${
-                        this.i18n(BraveAccountSettingsStrings
-                          .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_1)} ${
-                        this.i18n(BraveAccountSettingsStrings
-                          .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_2)} ${
+                        this.i18n(this.getVerificationLabels(
+                          this.state.loggedOut!.verification.intent)
+                            .description1)} ${
+                        this.i18n(this.getVerificationLabels(
+                          this.state.loggedOut!.verification.intent)
+                            .description2)} ${
                         this.i18nAdvanced(BraveAccountSettingsStrings
                           .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_3,
                           {tags: ['a'], attrs: ['href']})}`}
@@ -72,17 +73,15 @@ export function getHtml(this: SettingsBraveAccountRowElement) {
               <leo-button kind="plain"
                           size="small"
                           @click=${this.openBraveAccountDialog}>
-                ${this.i18n(
-                    BraveAccountSettingsStrings
-                         .SETTINGS_BRAVE_ACCOUNT_ENTER_REGISTRATION_CODE_BUTTON_LABEL)}
+                ${this.i18n(this.getVerificationLabels(
+                    this.state.loggedOut!.verification.intent).enterCodeLabel)}
               </leo-button>
               <leo-button kind="plain"
                           size="small"
                           class="cancel-registration-button"
                           @click=${this.onCancelButtonClicked}>
-                ${this.i18n(
-                    BraveAccountSettingsStrings
-                         .SETTINGS_BRAVE_ACCOUNT_CANCEL_REGISTRATION_BUTTON_LABEL)}
+                ${this.i18n(this.getVerificationLabels(
+                    this.state.loggedOut!.verification.intent).cancelLabel)}
               </leo-button>
             </div>`
           : html`

@@ -178,6 +178,21 @@ class StateBase : public mojom::Authentication {
   void CancelVerificationLoggedIn(
       mojom::LoggedInVerificationIntent intent) override;
 
+  void RequestPasswordReset(mojom::Service initiating_service,
+                            const std::string& email,
+                            RequestPasswordResetCallback callback) override;
+
+  void ResetPasswordVerify(const std::string& code,
+                           ResetPasswordVerifyCallback callback) override;
+
+  void ResetPasswordInitialize(
+      const std::string& blinded_message,
+      ResetPasswordInitializeCallback callback) override;
+
+  void ResetPasswordFinalize(const std::string& encrypted_verification_token,
+                             const std::string& serialized_record,
+                             ResetPasswordFinalizeCallback callback) override;
+
   void LoginInitialize(mojom::Service initiating_service,
                        const std::string& email,
                        const std::string& serialized_ke1,

@@ -104,6 +104,33 @@ void StateBase::CancelVerificationLoggedOut(
 
 void StateBase::CancelVerificationLoggedIn(mojom::LoggedInVerificationIntent) {}
 
+void StateBase::RequestPasswordReset(mojom::Service,
+                                     const std::string&,
+                                     RequestPasswordResetCallback callback) {
+  std::move(callback).Run(
+      MakeCalledInWrongStateError<mojom::ResetPasswordError>());
+}
+
+void StateBase::ResetPasswordVerify(const std::string&,
+                                    ResetPasswordVerifyCallback callback) {
+  std::move(callback).Run(
+      MakeCalledInWrongStateError<mojom::ResetPasswordError>());
+}
+
+void StateBase::ResetPasswordInitialize(
+    const std::string&,
+    ResetPasswordInitializeCallback callback) {
+  std::move(callback).Run(
+      MakeCalledInWrongStateError<mojom::ResetPasswordError>());
+}
+
+void StateBase::ResetPasswordFinalize(const std::string&,
+                                      const std::string&,
+                                      ResetPasswordFinalizeCallback callback) {
+  std::move(callback).Run(
+      MakeCalledInWrongStateError<mojom::ResetPasswordError>());
+}
+
 void StateBase::LoginInitialize(mojom::Service,
                                 const std::string&,
                                 const std::string&,

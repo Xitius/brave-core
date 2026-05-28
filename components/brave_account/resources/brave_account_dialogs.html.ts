@@ -49,6 +49,19 @@ export function getHtml(this: BraveAccountDialogsElement) {
       `
 
     case 'OTP':
-      return html` <brave-account-otp-dialog> </brave-account-otp-dialog> `
+      return html`
+        <brave-account-otp-dialog .intent=${this.intent}>
+        </brave-account-otp-dialog>
+      `
+
+    case 'SET_NEW_PASSWORD':
+      return html`
+        <brave-account-create-dialog
+          .email=${this.resetPasswordEmail}
+          .isCapsLockOn=${this.isCapsLockOn}
+          .mode=${'resetPassword'}
+        >
+        </brave-account-create-dialog>
+      `
   }
 }

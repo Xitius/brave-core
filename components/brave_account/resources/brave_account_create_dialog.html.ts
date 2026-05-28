@@ -3,11 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import { html } from '//resources/lit/v3_0/lit.rollup.js'
+import { html, nothing } from '//resources/lit/v3_0/lit.rollup.js'
+import { loadTimeData } from '//resources/js/load_time_data.js'
 
 import './brave_account_email_input.js'
 import './brave_account_password_input.js'
 import { BraveAccountCreateDialogElement } from './brave_account_create_dialog.js'
+import { BraveAccountStrings } from './brave_components_webui_strings.js'
 import type { EmailInputEventDetail } from './brave_account_email_input.js'
 import type { PasswordInputEventDetail } from './brave_account_password_input.js'
 import type { PasswordStrengthChangedEventDetail } from './brave_account_password_strength_meter.js'
@@ -16,18 +18,24 @@ export function getHtml(this: BraveAccountCreateDialogElement) {
   return html`<!--_html_template_start_-->
     <brave-account-dialog
       dialog-description="$i18n{BRAVE_ACCOUNT_DESCRIPTION}"
-      dialog-title="$i18n{BRAVE_ACCOUNT_CREATE_DIALOG_TITLE}"
+      .dialogTitle=${loadTimeData.getString(
+        this.mode === 'resetPassword'
+          ? BraveAccountStrings.BRAVE_ACCOUNT_SET_NEW_PASSWORD_DIALOG_TITLE
+          : BraveAccountStrings.BRAVE_ACCOUNT_CREATE_DIALOG_TITLE,
+      )}
       show-back-button
     >
       <div slot="inputs">
-        <brave-account-email-input
-          block-brave-alias
-          @email-input=${(e: CustomEvent<EmailInputEventDetail>) => {
-            this.email = e.detail.email
-            this.isEmailValid = e.detail.isValid
-          }}
-        >
-        </brave-account-email-input>
+        ${this.mode === 'resetPassword'
+          ? nothing
+          : html`<brave-account-email-input
+              block-brave-alias
+              @email-input=${(e: CustomEvent<EmailInputEventDetail>) => {
+                this.email = e.detail.email
+                this.isEmailValid = e.detail.isValid
+              }}
+            >
+            </brave-account-email-input>`}
         <brave-account-password-input
           .config=${{
             mode: 'strength',
@@ -59,14 +67,18 @@ export function getHtml(this: BraveAccountCreateDialogElement) {
       </div>
       <leo-button
         slot="buttons"
-        ?isDisabled=${!this.isEmailValid
+        ?isDisabled=${(this.mode !== 'resetPassword' && !this.isEmailValid)
         || !this.isPasswordValid
         || !this.isPasswordStrongEnough
         || this.passwordConfirmation !== this.password
-        || this.isCreatingAccount}
-        @click=${this.onCreateAccountButtonClicked}
+        || this.isSubmitting}
+        @click=${this.onSubmitButtonClicked}
       >
-        $i18n{BRAVE_ACCOUNT_CREATE_ACCOUNT_BUTTON_LABEL}
+        ${loadTimeData.getString(
+          this.mode === 'resetPassword'
+            ? BraveAccountStrings.BRAVE_ACCOUNT_SET_NEW_PASSWORD_BUTTON_LABEL
+            : BraveAccountStrings.BRAVE_ACCOUNT_CREATE_ACCOUNT_BUTTON_LABEL,
+        )}
       </leo-button>
     </brave-account-dialog>
     <!--_html_template_end_-->`
