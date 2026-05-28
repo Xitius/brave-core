@@ -1,0 +1,12 @@
+diff --git a/build/toolchain/apple/toolchain.gni b/build/toolchain/apple/toolchain.gni
+index c27949b50782ad445468d214ece7a1c65a4eed1f..c7e5fd4bfa16cd47cec19902867794bd781cc20a 100644
+--- a/build/toolchain/apple/toolchain.gni
++++ b/build/toolchain/apple/toolchain.gni
+@@ -107,6 +107,7 @@ template("single_apple_toolchain") {
+     assert(defined(invoker.toolchain_args),
+            "Toolchains must declare toolchain_args")
+     _toolchain_args = invoker.toolchain_args
++    not_needed([ "_toolchain_args" ])
+     toolchain_args = {
+       # Populate toolchain args from the invoker.
+       forward_variables_from(invoker.toolchain_args, "*")
