@@ -6,29 +6,23 @@
 #include "brave/browser/ui/browser_commands.h"
 
 #include "base/check.h"
+#include "base/logging.h"
 #include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/common/webui_url_constants.h"
 
-#define ReloadBypassingCache ReloadBypassingCache_ChromiumImpl
-#define GetReadingListModel GetReadingListModel_ChromiumImpl
-#define kChromeUISplitViewNewTabPageURL kChromeUINewTabURL
-
-// Don't show toast when user tries to close a pinned tab via the keyboard
-// accelerator.
-#define BRAVE_CLOSE_TAB toast_controller = nullptr;
-
-#include <chrome/browser/ui/browser_commands.cc>
-
-#undef BRAVE_CLOSE_TAB
-#undef kChromeUISplitViewNewTabPageURL
-#undef ReloadBypassingCache
-#undef GetReadingListModel
+class ReadingListModel;
 
 namespace chrome {
 
+// We override upstream's ReloadBypassingCache_ChromiumImpl with this function.
+// This is needed to handle the case where the profile is a Tor profile,
+// in which case we want to trigger a new Tor connection instead of a regular
+// hard reload.
+void ReloadBypassingCache_ChromiumImpl(BrowserWindowInterface* browser,
+                                       WindowOpenDisposition disposition);
 void ReloadBypassingCache(BrowserWindowInterface* browser,
                           WindowOpenDisposition disposition) {
 #if BUILDFLAG(ENABLE_TOR)
@@ -43,8 +37,6 @@ void ReloadBypassingCache(BrowserWindowInterface* browser,
   ReloadBypassingCache_ChromiumImpl(browser, disposition);
 }
 
-ReadingListModel* GetReadingListModel(Browser* browser) {
-  return nullptr;
-}
-
 }  // namespace chrome
+
+#include <chrome/browser/ui/browser_commands.cc>
