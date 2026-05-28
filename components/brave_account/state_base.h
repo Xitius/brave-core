@@ -15,10 +15,12 @@
 #include "base/functional/callback.h"
 #include "base/memory/raw_ref.h"
 #include "base/memory/scoped_refptr.h"
+#include "base/types/expected.h"
 #include "brave/components/brave_account/brave_account_encryption.h"
 #include "brave/components/brave_account/brave_account_state_prefs.h"
 #include "brave/components/brave_account/endpoint_client/client.h"
 #include "brave/components/brave_account/endpoint_client/request_handle.h"
+#include "brave/components/brave_account/endpoints/verify_resend.h"
 #include "brave/components/brave_account/mojom/brave_account.mojom.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
@@ -121,6 +123,31 @@ class StateBase : public mojom::Authentication {
         base::BindOnce([](typename Endpoint::Response) {}));
   }
 
+  // The two `Resend*` mojom methods share an identical
+  // `result<ResendConfirmationEmailResult, ResendConfirmationEmailError>`
+  // callback type; mojo generates two distinct typedefs for them. Use this
+  // alias so the shared implementation does not have to pick a side.
+  using ResendConfirmationEmailCallback = base::OnceCallback<void(
+      base::expected<mojom::ResendConfirmationEmailResultPtr,
+                     mojom::ResendConfirmationEmailErrorPtr>)>;
+
+  // Shared implementation of `ResendConfirmationEmailLoggedOut` and
+  // `ResendConfirmationEmailLoggedIn`: derived states wrap their
+  // state-specific intent into a `VerificationIntent` union and forward
+  // here. The union tag selects which verification token is read from
+  // prefs; the rest of the request (and the response handling) is
+  // identical across intents.
+  void ResendConfirmationEmail(mojom::VerificationIntentPtr intent,
+                               ResendConfirmationEmailCallback callback);
+
+  // Shared best-effort server-side cancel for
+  // `CancelVerificationLoggedOut` / `CancelVerificationLoggedIn`: the
+  // union tag selects which verification token is read from prefs; the
+  // request is fire-and-forget. The pref write that finalizes the
+  // cancellation remains in the derived state because it differs per
+  // state.
+  void CancelVerification(mojom::VerificationIntentPtr intent);
+
  private:
   void AddObserver(
       mojo::PendingRemote<mojom::AuthenticationObserver> observer) final;
@@ -137,10 +164,19 @@ class StateBase : public mojom::Authentication {
   void RegisterVerify(const std::string& code,
                       RegisterVerifyCallback callback) override;
 
-  void ResendConfirmationEmail(
-      ResendConfirmationEmailCallback callback) override;
+  void ResendConfirmationEmailLoggedOut(
+      mojom::LoggedOutVerificationIntent intent,
+      ResendConfirmationEmailLoggedOutCallback callback) override;
 
-  void CancelRegistration() override;
+  void ResendConfirmationEmailLoggedIn(
+      mojom::LoggedInVerificationIntent intent,
+      ResendConfirmationEmailLoggedInCallback callback) override;
+
+  void CancelVerificationLoggedOut(
+      mojom::LoggedOutVerificationIntent intent) override;
+
+  void CancelVerificationLoggedIn(
+      mojom::LoggedInVerificationIntent intent) override;
 
   void LoginInitialize(mojom::Service initiating_service,
                        const std::string& email,
@@ -155,6 +191,9 @@ class StateBase : public mojom::Authentication {
 
   void GetServiceToken(mojom::Service service,
                        GetServiceTokenCallback callback) override;
+
+  void OnResendConfirmationEmail(ResendConfirmationEmailCallback callback,
+                                 endpoints::VerifyResend::Response response);
 
   void RemoveRequestHandle(
       std::list<endpoint_client::RequestHandle>::iterator slot);

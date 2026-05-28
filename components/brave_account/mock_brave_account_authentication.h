@@ -46,11 +46,26 @@ class MockBraveAccountAuthentication : public mojom::Authentication {
               (override));
 
   MOCK_METHOD(void,
-              ResendConfirmationEmail,
-              (ResendConfirmationEmailCallback callback),
+              ResendConfirmationEmailLoggedOut,
+              (mojom::LoggedOutVerificationIntent intent,
+               ResendConfirmationEmailLoggedOutCallback callback),
               (override));
 
-  MOCK_METHOD(void, CancelRegistration, (), (override));
+  MOCK_METHOD(void,
+              ResendConfirmationEmailLoggedIn,
+              (mojom::LoggedInVerificationIntent intent,
+               ResendConfirmationEmailLoggedInCallback callback),
+              (override));
+
+  MOCK_METHOD(void,
+              CancelVerificationLoggedOut,
+              (mojom::LoggedOutVerificationIntent intent),
+              (override));
+
+  MOCK_METHOD(void,
+              CancelVerificationLoggedIn,
+              (mojom::LoggedInVerificationIntent intent),
+              (override));
 
   MOCK_METHOD(void,
               LoginInitialize,

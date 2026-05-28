@@ -8,12 +8,26 @@
 #include <utility>
 
 #include "base/check.h"
+#include "base/check_deref.h"
+#include "base/functional/bind.h"
+#include "base/types/expected.h"
 #include "brave/components/brave_account/brave_account_encryption.h"
+#include "brave/components/brave_account/brave_account_service_constants.h"
+#include "brave/components/brave_account/endpoint_client/with_headers.h"
+#include "brave/components/brave_account/endpoints/verify_delete.h"
 #include "brave/components/brave_account/state_internal.h"
+#include "net/http/http_status_code.h"
 
 namespace brave_account {
 
+using endpoint_client::SetBearerToken;
+using endpoint_client::WithHeaders;
+using endpoints::VerifyDelete;
+using endpoints::VerifyResend;
 using internal::MakeCalledInWrongStateError;
+using internal::MakeClientError;
+using internal::MakeRequest;
+using internal::MakeServerError;
 
 void StateBase::AddReceiver(
     mojo::PendingReceiver<mojom::Authentication> receiver) {
@@ -71,13 +85,24 @@ void StateBase::RegisterVerify(const std::string&,
   std::move(callback).Run(MakeCalledInWrongStateError<mojom::RegisterError>());
 }
 
-void StateBase::ResendConfirmationEmail(
-    ResendConfirmationEmailCallback callback) {
+void StateBase::ResendConfirmationEmailLoggedOut(
+    mojom::LoggedOutVerificationIntent,
+    ResendConfirmationEmailLoggedOutCallback callback) {
   std::move(callback).Run(
       MakeCalledInWrongStateError<mojom::ResendConfirmationEmailError>());
 }
 
-void StateBase::CancelRegistration() {}
+void StateBase::ResendConfirmationEmailLoggedIn(
+    mojom::LoggedInVerificationIntent,
+    ResendConfirmationEmailLoggedInCallback callback) {
+  std::move(callback).Run(
+      MakeCalledInWrongStateError<mojom::ResendConfirmationEmailError>());
+}
+
+void StateBase::CancelVerificationLoggedOut(
+    mojom::LoggedOutVerificationIntent) {}
+
+void StateBase::CancelVerificationLoggedIn(mojom::LoggedInVerificationIntent) {}
 
 void StateBase::LoginInitialize(mojom::Service,
                                 const std::string&,
@@ -98,6 +123,81 @@ void StateBase::GetServiceToken(mojom::Service,
                                 GetServiceTokenCallback callback) {
   std::move(callback).Run(
       MakeCalledInWrongStateError<mojom::GetServiceTokenError>());
+}
+
+void StateBase::ResendConfirmationEmail(
+    mojom::VerificationIntentPtr intent,
+    ResendConfirmationEmailCallback callback) {
+  const auto encrypted_verification_token =
+      account_state_prefs_->GetVerificationToken(std::move(intent));
+  // No verification of this intent is pending: a misbehaving renderer can
+  // reach this even when the state is otherwise correct, so soft-fail
+  // instead of crashing the browser.
+  if (encrypted_verification_token.empty()) {
+    return std::move(callback).Run(
+        MakeCalledInWrongStateError<mojom::ResendConfirmationEmailError>());
+  }
+  const auto verification_token = Decrypt(encrypted_verification_token);
+  if (verification_token.empty()) {
+    return std::move(callback).Run(
+        base::unexpected(MakeClientError<mojom::ResendConfirmationEmailError>(
+            mojom::ResendConfirmationEmailClientErrorCode::
+                kVerificationTokenDecryptionFailed)));
+  }
+
+  auto request = MakeRequest<WithHeaders<VerifyResend::Request>>();
+  SetBearerToken(request, verification_token);
+  // Server side will determine locale based on the Accept-Language request
+  // header (which is included automatically by upstream).
+  request.body.locale = "";
+  request.timeout_duration = kVerifyResendTimeout;
+
+  SendStateOwnedRequest<VerifyResend>(
+      std::move(request),
+      base::BindOnce(&StateBase::OnResendConfirmationEmail,
+                     weak_factory_.GetWeakPtr(), std::move(callback)));
+}
+
+void StateBase::OnResendConfirmationEmail(
+    ResendConfirmationEmailCallback callback,
+    VerifyResend::Response response) {
+  if (response.status_code == net::HTTP_NO_CONTENT) {
+    return std::move(callback).Run(mojom::ResendConfirmationEmailResult::New());
+  }
+
+  if (!response.body || response.body->has_value()) {
+    return std::move(callback).Run(
+        base::unexpected(MakeServerError<mojom::ResendConfirmationEmailError>(
+            response.status_code.value_or(response.net_error),
+            mojom::ResendConfirmationEmailServerErrorCode::kInvalidResponse)));
+  }
+
+  std::move(callback).Run(
+      base::unexpected(MakeServerError<mojom::ResendConfirmationEmailError>(
+          CHECK_DEREF(response.status_code),
+          std::move(response.body->error()))));
+}
+
+void StateBase::CancelVerification(mojom::VerificationIntentPtr intent) {
+  // Best-effort notification to the server, since server side will clean up
+  // verification tokens automatically (currently after 30 minutes).
+  // Not adopted into the state's in-flight bag:
+  // best-effort with no callback that touches state.
+  const auto encrypted_verification_token =
+      account_state_prefs_->GetVerificationToken(std::move(intent));
+  // No verification of this intent is pending: a misbehaving renderer can
+  // reach this even when the state is otherwise correct, so just drop the
+  // request instead of crashing the browser.
+  if (encrypted_verification_token.empty()) {
+    return;
+  }
+  if (const auto verification_token = Decrypt(encrypted_verification_token);
+      !verification_token.empty()) {
+    auto request = MakeRequest<WithHeaders<VerifyDelete::Request>>();
+    SetBearerToken(request, verification_token);
+
+    SendUnownedRequest<VerifyDelete>(std::move(request));
+  }
 }
 
 void StateBase::RemoveRequestHandle(

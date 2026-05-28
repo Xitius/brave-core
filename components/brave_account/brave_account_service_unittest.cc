@@ -916,7 +916,8 @@ TEST_P(BraveAccountServiceRegisterFinalizeTest,
     EXPECT_EQ(state->get_logged_out()->verification->intent,
               mojom::LoggedOutVerificationIntent::kRegistration);
     EXPECT_EQ(account_state_prefs.GetVerificationToken(
-                  mojom::LoggedOutVerificationIntent::kRegistration),
+                  mojom::VerificationIntent::NewLoggedOutIntent(
+                      mojom::LoggedOutVerificationIntent::kRegistration)),
               test_case.encrypted_verification_token);
   }
 }
@@ -971,7 +972,8 @@ struct RegisterVerifyTestCase {
                           mojom::LoggedOutVerificationIntent::kRegistration);
                 EXPECT_EQ(
                     account_state_prefs.GetVerificationToken(
-                        mojom::LoggedOutVerificationIntent::kRegistration),
+                        mojom::VerificationIntent::NewLoggedOutIntent(
+                            mojom::LoggedOutVerificationIntent::kRegistration)),
                     EncryptedVerificationToken());
               }
             },
@@ -1333,7 +1335,8 @@ struct ResendConfirmationEmailTestCase {
             EncryptedVerificationToken(),
             mojom::LoggedOutVerificationIntent::kRegistration);
 
-    authentication->ResendConfirmationEmail(std::move(callback));
+    authentication->ResendConfirmationEmailLoggedOut(
+        mojom::LoggedOutVerificationIntent::kRegistration, std::move(callback));
   }
 
   std::string test_name;
@@ -1751,7 +1754,8 @@ struct CancelRegistrationTestCase {
     account_state_prefs.SetLoggedOutWithVerification(
         EncryptedVerificationToken(),
         mojom::LoggedOutVerificationIntent::kRegistration);
-    authentication->CancelRegistration();
+    authentication->CancelVerificationLoggedOut(
+        mojom::LoggedOutVerificationIntent::kRegistration);
     authentication.FlushForTesting();
     const auto state = account_state_prefs.GetAccountState();
     ASSERT_TRUE(state->is_logged_out());

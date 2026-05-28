@@ -13,6 +13,7 @@ import { BraveAccountStrings } from './brave_components_webui_strings.js'
 import { showError, showSuccess } from './brave_account_common.js'
 import { getHtml } from './brave_account_otp_dialog.html.js'
 import {
+  LoggedOutVerificationIntent,
   RegisterClientErrorCode,
   RegisterError,
   ResendConfirmationEmailClientErrorCode,
@@ -62,7 +63,9 @@ export class BraveAccountOtpDialogElement extends CrLitElement {
     let error: ResendConfirmationEmailError | undefined
 
     try {
-      await this.browserProxy.authentication.resendConfirmationEmail()
+      await this.browserProxy.authentication.resendConfirmationEmailLoggedOut(
+        LoggedOutVerificationIntent.kRegistration,
+      )
     } catch (e) {
       if (e && typeof e === 'object') {
         error = e as ResendConfirmationEmailError

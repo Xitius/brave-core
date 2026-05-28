@@ -79,7 +79,7 @@ export function getHtml(this: SettingsBraveAccountRowElement) {
               <leo-button kind="plain"
                           size="small"
                           class="cancel-registration-button"
-                          @click=${this.onCancelRegistrationButtonClicked}>
+                          @click=${this.onCancelButtonClicked}>
                 ${this.i18n(
                     BraveAccountSettingsStrings
                          .SETTINGS_BRAVE_ACCOUNT_CANCEL_REGISTRATION_BUTTON_LABEL)}

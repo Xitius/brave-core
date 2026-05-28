@@ -16,7 +16,6 @@
 #include "brave/components/brave_account/endpoints/password_finalize.h"
 #include "brave/components/brave_account/endpoints/password_init.h"
 #include "brave/components/brave_account/endpoints/verify_complete.h"
-#include "brave/components/brave_account/endpoints/verify_resend.h"
 #include "brave/components/brave_account/mojom/brave_account.mojom.h"
 #include "brave/components/brave_account/state_base.h"
 #include "components/os_crypt/async/common/encryptor.h"
@@ -29,7 +28,7 @@ namespace brave_account {
 
 // `mojom::Authentication` surface available before login:
 // `RegisterInitialize()`, `RegisterFinalize()`, `RegisterVerify()`,
-// `ResendConfirmationEmail()`, `CancelRegistration()`,
+// `ResendConfirmationEmailLoggedOut()`, `CancelVerificationLoggedOut()`,
 // `LoginInitialize()`, and `LoginFinalize()`.
 // All other methods inherit `StateBase`'s wrong-state default.
 class LoggedOutState : public StateBase {
@@ -58,10 +57,12 @@ class LoggedOutState : public StateBase {
   void RegisterVerify(const std::string& code,
                       RegisterVerifyCallback callback) override;
 
-  void ResendConfirmationEmail(
-      ResendConfirmationEmailCallback callback) override;
+  void ResendConfirmationEmailLoggedOut(
+      mojom::LoggedOutVerificationIntent intent,
+      ResendConfirmationEmailLoggedOutCallback callback) override;
 
-  void CancelRegistration() override;
+  void CancelVerificationLoggedOut(
+      mojom::LoggedOutVerificationIntent intent) override;
 
   void LoginInitialize(mojom::Service initiating_service,
                        const std::string& email,
@@ -82,8 +83,6 @@ class LoggedOutState : public StateBase {
   void OnRegisterVerify(RegisterVerifyCallback callback,
                         endpoints::VerifyComplete::Response response);
 
-  void OnResendConfirmationEmail(ResendConfirmationEmailCallback callback,
-                                 endpoints::VerifyResend::Response response);
 
   void OnLoginInitialize(LoginInitializeCallback callback,
                          endpoints::LoginInit::Response response);

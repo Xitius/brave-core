@@ -101,7 +101,16 @@ export class SettingsBraveAccountRowElement extends I18nMixinLit(CrLitElement) {
     let error: ResendConfirmationEmailError | undefined
 
     try {
-      await this.browserProxy.authentication.resendConfirmationEmail()
+      switch (whichAccountState(this.state!)) {
+        case AccountStateFieldTags.LOGGED_OUT:
+          await this.browserProxy.authentication.resendConfirmationEmailLoggedOut(
+            this.state!.loggedOut!.verification!.intent)
+          break
+        case AccountStateFieldTags.LOGGED_IN:
+          await this.browserProxy.authentication.resendConfirmationEmailLoggedIn(
+            this.state!.loggedIn!.verification!.intent)
+          break
+      }
     } catch (e) {
       if (e && typeof e === 'object') {
         error = e as ResendConfirmationEmailError
@@ -132,8 +141,17 @@ export class SettingsBraveAccountRowElement extends I18nMixinLit(CrLitElement) {
     this.isResendingConfirmationEmail = false
   }
 
-  protected onCancelRegistrationButtonClicked() {
-    this.browserProxy.authentication.cancelRegistration()
+  protected onCancelButtonClicked() {
+    switch (whichAccountState(this.state!)) {
+      case AccountStateFieldTags.LOGGED_OUT:
+        this.browserProxy.authentication.cancelVerificationLoggedOut(
+          this.state!.loggedOut!.verification!.intent)
+        break
+      case AccountStateFieldTags.LOGGED_IN:
+        this.browserProxy.authentication.cancelVerificationLoggedIn(
+          this.state!.loggedIn!.verification!.intent)
+        break
+    }
   }
 
   protected openBraveAccountDialog() {
