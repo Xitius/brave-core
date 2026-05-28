@@ -90,7 +90,17 @@ void OnSearchResult(PendingCall* pending,
   pending->responded = true;
   std::string serialized = internal::BuildSemanticSearchResultsJson(
       pending->tabs, result, pending->count);
-  std::move(pending->callback).Run(CreateContentBlocksForText(serialized), {});
+  std::vector<mojom::ToolArtifactPtr> artifacts;
+  std::string sources_json = internal::BuildSemanticSearchTabSourcesJson(
+      pending->tabs, result, pending->count);
+  if (!sources_json.empty()) {
+    auto artifact = mojom::ToolArtifact::New();
+    artifact->type = mojom::kTabSourcesArtifactType;
+    artifact->content_json = std::move(sources_json);
+    artifacts.push_back(std::move(artifact));
+  }
+  std::move(pending->callback)
+      .Run(CreateContentBlocksForText(serialized), std::move(artifacts));
 }
 
 }  // namespace
@@ -131,6 +141,42 @@ std::string BuildSemanticSearchResultsJson(
   }
   base::DictValue root;
   root.Set("results", std::move(results_list));
+  std::string serialized;
+  base::JSONWriter::Write(root, &serialized);
+  return serialized;
+}
+
+std::string BuildSemanticSearchTabSourcesJson(
+    const std::vector<SemanticSearchTabInfo>& tabs,
+    const history_embeddings::SearchResult& result,
+    size_t count) {
+  base::flat_map<history::URLID, const SemanticSearchTabInfo*> by_url_id;
+  for (const auto& tab : tabs) {
+    if (tab.url_id != 0) {
+      by_url_id.emplace(tab.url_id, &tab);
+    }
+  }
+
+  base::ListValue sources;
+  for (const auto& row : result.scored_url_rows) {
+    if (sources.size() >= count) {
+      break;
+    }
+    auto it = by_url_id.find(row.scored_url.url_id);
+    if (it == by_url_id.end()) {
+      continue;
+    }
+    base::DictValue entry;
+    entry.Set("tab_id", it->second->tab_id);
+    entry.Set("title", it->second->title);
+    entry.Set("url", it->second->url.spec());
+    sources.Append(std::move(entry));
+  }
+  if (sources.empty()) {
+    return std::string();
+  }
+  base::DictValue root;
+  root.Set("sources", std::move(sources));
   std::string serialized;
   base::JSONWriter::Write(root, &serialized);
   return serialized;

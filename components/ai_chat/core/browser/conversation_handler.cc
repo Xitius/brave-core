@@ -43,6 +43,7 @@
 #include "brave/components/ai_chat/core/browser/associated_content_manager.h"
 #include "brave/components/ai_chat/core/browser/model_service.h"
 #include "brave/components/ai_chat/core/browser/model_validator.h"
+#include "brave/components/ai_chat/core/browser/tab_tracker_service.h"
 #include "brave/components/ai_chat/core/browser/tools/tool.h"
 #include "brave/components/ai_chat/core/browser/types.h"
 #include "brave/components/ai_chat/core/browser/utils.h"
@@ -991,6 +992,13 @@ void ConversationHandler::RetryAPIRequest() {
       break;
     }
   }
+}
+
+void ConversationHandler::SwitchToTab(int32_t tab_id) {
+  if (!ai_chat_service_ || !ai_chat_service_->tab_tracker_service()) {
+    return;
+  }
+  ai_chat_service_->tab_tracker_service()->ActivateTab(tab_id);
 }
 
 void ConversationHandler::StopGenerationAndMaybeGetHumanEntry(

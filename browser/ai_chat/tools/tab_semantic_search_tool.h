@@ -44,6 +44,14 @@ std::string BuildSemanticSearchResultsJson(
     const history_embeddings::SearchResult& result,
     size_t count);
 
+// Same mapping, but serialized as a `kTabSourcesArtifactType` artifact
+// payload for the chat frontend to render as clickable cards. Returns the
+// empty string when no results map to open tabs.
+std::string BuildSemanticSearchTabSourcesJson(
+    const std::vector<SemanticSearchTabInfo>& tabs,
+    const history_embeddings::SearchResult& result,
+    size_t count);
+
 }  // namespace internal
 
 // Leo tool that semantically searches the user's currently-open tabs. Calls
