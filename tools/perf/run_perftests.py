@@ -22,7 +22,6 @@ import shutil
 import subprocess
 import sys
 import os
-import platform
 import tempfile
 from typing import List, Optional
 
@@ -67,15 +66,8 @@ def _log_go_env() -> None:
     os_name, exe = 'mac', 'go'
   else:
     os_name, exe = 'linux', 'go'
-
-  arch = platform.machine().lower()
-  if arch in ("arm64", "aarch64"):
-    arch = 'arm64'
-  else:
-    arch = 'x64'
-
   go_exe = os.path.join(path_util.GetSrcDir(), 'third_party', 'webpagereplay',
-                        'third_party', 'golang', os_name, arch, 'bin', exe)
+                        'third_party', 'golang', os_name, 'x64', 'bin', exe)
   try:
     out = subprocess.check_output([
         go_exe, 'env', 'GOPROXY', 'GOFLAGS', 'GOSUMDB', 'GONOSUMCHECK',
