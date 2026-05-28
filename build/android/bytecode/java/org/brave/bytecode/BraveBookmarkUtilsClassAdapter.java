@@ -16,7 +16,7 @@ public class BraveBookmarkUtilsClassAdapter extends BraveClassVisitor {
         super(visitor);
 
         changeMethodOwner(
-                sBookmarkUtilsClassName, "addOrEditBookmark", sBraveBookmarkUtilsClassName);
+                sBookmarkUtilsClassName, "addOrEditSingleBookmark", sBraveBookmarkUtilsClassName);
 
         changeMethodOwner(sBookmarkUtilsClassName, "isSpecialFolder", sBraveBookmarkUtilsClassName);
     }

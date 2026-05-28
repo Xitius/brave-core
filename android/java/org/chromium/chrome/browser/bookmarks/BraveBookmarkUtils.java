@@ -20,19 +20,30 @@ import org.chromium.components.bookmarks.BookmarkItem;
 import org.chromium.components.bookmarks.BookmarkType;
 import org.chromium.components.browser_ui.bottomsheet.BottomSheetController;
 
+import java.util.Collections;
+import java.util.List;
+
 /** A class holding static util functions for bookmark. */
 @NullMarked
 public class BraveBookmarkUtils extends BookmarkUtils {
     private static final String TAG = "BraveBookmarkUtils";
 
-    public static void addOrEditBookmark(
+    // WIP(AlexeyBarabash):
+    // https://source.chromium.org/chromium/chromium/src/+/282220e2d47e2ee8fa96daa9750e19f08fad0a93
+    // Do I need to override any of this:
+    //   - addOrEditBookmark
+    //   - addOrEditMultipleBookmarks
+    //   - addBookmarkInternal
+    // ?
+
+    public static void addOrEditSingleBookmark(
             @Nullable BookmarkItem existingBookmarkItem,
             BookmarkModel bookmarkModel,
             Tab tab,
             BottomSheetController bottomSheetController,
             Activity activity,
             @BookmarkType int bookmarkType,
-            Callback<@Nullable BookmarkId> callback,
+            Callback<List<@Nullable BookmarkId>> callback,
             boolean fromExplicitTrackUi,
             BookmarkManagerOpener bookmarkManagerOpener,
             PriceDropNotificationManager priceDropNotificationManager,
@@ -40,11 +51,11 @@ public class BraveBookmarkUtils extends BookmarkUtils {
         assert bookmarkModel.isBookmarkModelLoaded();
         if (existingBookmarkItem != null) {
             bookmarkModel.deleteBookmark(existingBookmarkItem.getId());
-            callback.onResult(existingBookmarkItem.getId());
+            callback.onResult(Collections.singletonList(existingBookmarkItem.getId()));
             return;
         }
 
-        BookmarkUtils.addOrEditBookmark(
+        BookmarkUtils.addOrEditSingleBookmark(
                 existingBookmarkItem,
                 bookmarkModel,
                 tab,

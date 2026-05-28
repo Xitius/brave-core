@@ -1,0 +1,13 @@
+diff --git a/chrome/browser/bookmarks/android/java/src/org/chromium/chrome/browser/bookmarks/BookmarkUtils.java b/chrome/browser/bookmarks/android/java/src/org/chromium/chrome/browser/bookmarks/BookmarkUtils.java
+index 8044e228a570c3fe72cbeed17596725a3bae7ada..bef77421cc4595c5a4365510bc85d328c7bedd56 100644
+--- a/chrome/browser/bookmarks/android/java/src/org/chromium/chrome/browser/bookmarks/BookmarkUtils.java
++++ b/chrome/browser/bookmarks/android/java/src/org/chromium/chrome/browser/bookmarks/BookmarkUtils.java
+@@ -126,7 +126,7 @@ public class BookmarkUtils {
+         }
+     }
+ 
+-    private static void addOrEditSingleBookmark(
++    /* package */ static void addOrEditSingleBookmark(
+             @Nullable BookmarkItem existingBookmarkItem,
+             BookmarkModel bookmarkModel,
+             Tab tab,
