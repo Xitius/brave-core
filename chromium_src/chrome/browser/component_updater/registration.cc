@@ -19,7 +19,6 @@
 #include "brave/components/local_ai/core/local_models_updater.h"
 #include "brave/components/p3a/component_installer.h"
 #include "brave/components/p3a/p3a_service.h"
-#include "brave/components/playlist/core/common/buildflags/buildflags.h"
 #include "brave/components/psst/buildflags/buildflags.h"
 #include "brave/components/query_filter/browser/query_filter_component_installer.h"
 #include "chrome/browser/browser_process.h"
@@ -36,10 +35,6 @@
 #if BUILDFLAG(ENABLE_BRAVE_WALLET)
 #include "brave/components/brave_wallet/browser/wallet_data_files_installer.h"
 #endif  // BUILDFLAG(ENABLE_BRAVE_WALLET)
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/core/browser/playlist_exclusion_component_installer.h"
-#endif  // BUILDFLAG(ENABLE_PLAYLIST)
 
 namespace component_updater {
 
@@ -60,9 +55,6 @@ void RegisterComponentsForUpdate() {
   RegisterZxcvbnDataComponent(cus);
 #endif  // BUILDFLAG(IS_ANDROID)
   brave_user_agent::RegisterBraveUserAgentComponent(cus);
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  playlist::RegisterPlaylistExclusionsComponent(cus);
-#endif  // BUILDFLAG(ENABLE_PLAYLIST)
   local_ai::ManageLocalModelsComponentRegistration(cus);
   RegisterQueryFilterComponent(cus);
 }
