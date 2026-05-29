@@ -23,9 +23,11 @@ public class BraveIntentHandlerClassAdapter extends BraveClassVisitor {
         makePublicMethod(sIntentHandlerClassName, "getUrlForWebapp");
         changeMethodOwner(sBraveIntentHandlerClassName, "getUrlForWebapp", sIntentHandlerClassName);
 
-        makePublicMethod(sIntentHandlerClassName, "isJavascriptSchemeOrInvalidUrl");
-        changeMethodOwner(sBraveIntentHandlerClassName, "isJavascriptSchemeOrInvalidUrl",
-                sIntentHandlerClassName);
+        // WIP(AlexeyBarabash):
+        // Chromium commit 12e255170a7d7e541b11b09c9407187529d6d087
+        // makePublicMethod(sIntentHandlerClassName, "isJavascriptSchemeOrInvalidUrl");
+        // changeMethodOwner(sBraveIntentHandlerClassName, "isJavascriptSchemeOrInvalidUrl",
+        //         sIntentHandlerClassName);
 
         changeMethodOwner(
                 sIntentHandlerClassName, "extractUrlFromIntent", sBraveIntentHandlerClassName);

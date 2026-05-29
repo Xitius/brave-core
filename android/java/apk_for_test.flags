@@ -697,7 +697,9 @@
     public <init>(...);
     *** getUrlForCustomTab(...);
     *** getUrlForWebapp(...);
-    *** isJavascriptSchemeOrInvalidUrl(...);
+    # WIP(AlexeyBarabash):
+    # Chromium commit 12e255170a7d7e541b11b09c9407187529d6d087
+    # *** isJavascriptSchemeOrInvalidUrl(...);
     *** extractUrlFromIntent(...);
     *** isUrlUnsafe(...);
 }

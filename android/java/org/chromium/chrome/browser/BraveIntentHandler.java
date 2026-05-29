@@ -153,7 +153,9 @@ public class BraveIntentHandler {
     protected static String getUrlFromText(Intent intent) {
         if (intent == null) return null;
         String text = IntentUtils.safeGetStringExtra(intent, Intent.EXTRA_TEXT);
-        return (text == null || isJavascriptSchemeOrInvalidUrl(text)) ? null : text;
+        // WIP(AlexeyBarabash):
+        // Chromium commit 12e255170a7d7e541b11b09c9407187529d6d087
+        return (text == null /*|| isJavascriptSchemeOrInvalidUrl(text)*/) ? null : text;
     }
 
     @Nullable
@@ -197,10 +199,12 @@ public class BraveIntentHandler {
         return null;
     }
 
-    private static boolean isJavascriptSchemeOrInvalidUrl(String unused_url) {
-        assert false;
-        return false;
-    }
+    // WIP(AlexeyBarabash):
+    // Chromium commit 12e255170a7d7e541b11b09c9407187529d6d087
+    // private static boolean isJavascriptSchemeOrInvalidUrl(String unused_url) {
+    //     assert false;
+    //     return false;
+    // }
 
     /**
      * Bytecode-redirected from {@link IntentHandler#isUrlUnsafe}. Defers to the upstream check
