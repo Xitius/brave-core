@@ -11,21 +11,54 @@
 // active, so that the class declaration keeps the original Open name and the
 // include guard prevents the header from being re-processed when the upstream
 // .cc pulls it in.
+#include "brave/browser/ui/views/side_panel/side_panel_utils.h"
 #include "chrome/browser/ui/views/side_panel/side_panel.h"
+#include "ui/compositor/layer.h"
 
-// Rename the upstream Add/RemoveHeaderView implementation so we can provide
-// a thin wrapper that reapplies border state.
+// Rename upstream methods so we can provide thin wrappers that reapply
+// rounded-corner and border state.
 #define AddHeaderView AddHeaderView_ChromiumImpl
+#define Open Open_ChromiumImpl
 #define RemoveHeaderView RemoveHeaderView_ChromiumImpl
 
 #include <chrome/browser/ui/views/side_panel/side_panel.cc>
 
 #undef RemoveHeaderView
+#undef Open
 #undef AddHeaderView
 
 #endif  // BUILDFLAG(ENABLE_SIDEBAR_V2)
 
 #if BUILDFLAG(ENABLE_SIDEBAR_V2)
+
+namespace {
+
+// Applies the current rounded-corner values to every direct child of the
+// content wrapper. Used when the pref changes or the panel opens with
+// existing content (so OnChildViewAdded never fired with the new values).
+void UpdateContentWrapperChildCorners(views::View* wrapper,
+                                      PrefService* prefs,
+                                      bool has_header) {
+  auto corners = brave::GetPanelContentsRoundedCorners(prefs, has_header);
+  for (views::View* child : wrapper->children()) {
+    if (views::IsViewClass<views::WebView>(child)) {
+      views::AsViewClass<views::WebView>(child)->holder()->SetCornerRadii(
+          corners);
+    }
+    if (child->children().size() == 1 &&
+        views::IsViewClass<views::WebView>(child->children()[0])) {
+      views::AsViewClass<views::WebView>(child->children()[0])
+          ->holder()
+          ->SetCornerRadii(corners);
+    }
+    if (child->layer()) {
+      child->layer()->SetIsFastRoundedCorner(true);
+      child->layer()->SetRoundedCornerRadius(corners);
+    }
+  }
+}
+
+}  // namespace
 
 void SidePanel::SetResizeArea(std::unique_ptr<views::View> resize_area) {
   CHECK(resize_area);
@@ -49,6 +82,15 @@ void SidePanel::SetRoundedBorderEnabled(bool enabled) {
   }
 }
 
+void SidePanel::Open(bool animated) {
+  Open_ChromiumImpl(animated);
+  // Re-apply corners to existing content: the pref may have changed while the
+  // panel was closed, so OnChildViewAdded wouldn't have seen the new value.
+  UpdateContentWrapperChildCorners(GetContentParentView(),
+                                   browser_view_->GetProfile()->GetPrefs(),
+                                   GetHeaderView<views::View>());
+}
+
 void SidePanel::UpdateBorder() {
   // When a Brave header is attached, reserve top inset for it so the header
   // paints over the border strip without overlapping content.
@@ -64,6 +106,11 @@ void SidePanel::UpdateBorder() {
     SetBorder(
         views::CreateEmptyBorder(gfx::Insets::TLBR(header_top_inset, 0, 0, 0)));
   }
+
+  // Re-apply corners to existing content: the pref or header state changed.
+  UpdateContentWrapperChildCorners(GetContentParentView(),
+                                   browser_view_->GetProfile()->GetPrefs(),
+                                   GetHeaderView<views::View>());
 }
 
 void SidePanel::AddHeaderView(std::unique_ptr<views::View> view) {

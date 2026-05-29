@@ -25,6 +25,7 @@
   void SetRoundedBorderEnabled(bool enabled);                         \
   void UpdateBorder();                                                \
   void AddHeaderView_ChromiumImpl(std::unique_ptr<views::View> view); \
+  void Open_ChromiumImpl(bool animated);                              \
   void RemoveHeaderView_ChromiumImpl()
 
 #define did_resize_    \
