@@ -1,0 +1,51 @@
+diff --git a/tools/run.py b/tools/run.py
+index 29a3e273b32dc8d7fa9837da41b4cbb88d9503fb..97fe1592d0b292751c35a106b71e5412c12ee9b7 100644
+--- a/tools/run.py
++++ b/tools/run.py
+@@ -59,6 +59,46 @@ def main() -> int:
+     if sys.platform == 'win32':
+         go_binary += '.exe'
+ 
++    print("===== GO DEBUG =====")
++    print("GOPROXY env:", repr(os.environ.get("GOPROXY")))
++    print("GOTOOLCHAIN env:", repr(os.environ.get("GOTOOLCHAIN")))
++
++    for cmd in [
++            [go_binary, "version"],
++            [go_binary, "env", "GOPROXY"],
++            [go_binary, "env", "GOTOOLCHAIN"],
++            [go_binary, "env", "GOENV"],
++            [go_binary, "env", "GOROOT"],
++    ]:
++        try:
++            print(f"\n>>> {' '.join(cmd)}")
++            r = subprocess.run(cmd, capture_output=True, text=True)
++            print(r.stdout)
++            print(r.stderr)
++        except Exception as e:
++            print("FAILED:", e)
++
++    for k in sorted(os.environ):
++        if k.startswith("GO"):
++            print(f"{k}={os.environ[k]!r}")
++
++    goenv_path = subprocess.check_output(
++        [go_binary, "env", "GOENV"],
++        text=True,
++    ).strip()
++
++    print("GOENV FILE:", goenv_path)
++
++    if os.path.exists(goenv_path):
++        with open(goenv_path, "r", encoding="utf-8") as f:
++            print("===== GOENV CONTENTS =====")
++            print(f.read())
++            print("===== END GOENV CONTENTS =====")
++    else:
++        print("GOENV FILE DOES NOT EXIST")
++
++    print("===== END GO DEBUG =====")
++
+     cmd = [
+         go_binary,
+         'run',
