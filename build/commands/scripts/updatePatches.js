@@ -60,7 +60,6 @@ export default function RunCommand(filePaths, options) {
   const chromiumDir = config.srcDir
   const v8Dir = path.join(config.srcDir, 'v8')
   const catapultDir = path.join(config.srcDir, 'third_party', 'catapult')
-  const dawnDir = path.join(config.srcDir, 'third_party', 'dawn')
   const devtoolsFrontendDir = path.join(
     config.srcDir,
     'third_party',
@@ -76,7 +75,6 @@ export default function RunCommand(filePaths, options) {
   const patchDir = path.join(config.braveCoreDir, 'patches')
   const v8PatchDir = path.join(patchDir, 'v8')
   const catapultPatchDir = path.join(patchDir, 'third_party', 'catapult')
-  const dawnPatchDir = path.join(patchDir, 'third_party', 'dawn')
   const devtoolsFrontendPatchDir = path.join(
     patchDir,
     'third_party',
@@ -97,8 +95,6 @@ export default function RunCommand(filePaths, options) {
     updatePatches(v8Dir, v8PatchDir, filePaths),
     // third_party/catapult
     updatePatches(catapultDir, catapultPatchDir, filePaths),
-    // third_party/dawn
-    updatePatches(dawnDir, dawnPatchDir, filePaths),
     // third_party/devtools-frontend/src
     updatePatches(devtoolsFrontendDir, devtoolsFrontendPatchDir, filePaths),
     // third_party/search_engines_data

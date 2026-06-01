@@ -41,7 +41,6 @@ async function applyPatches(printPatchFailuresInJson) {
   const patchesPath = path.join(coreRepoPath, 'patches')
   const v8PatchesPath = path.join(patchesPath, 'v8')
   const catapultPatchesPath = path.join(patchesPath, 'third_party', 'catapult')
-  const dawnPatchesPath = path.join(patchesPath, 'third_party', 'dawn')
   const devtoolsFrontendPatchesPath = path.join(
     patchesPath,
     'third_party',
@@ -62,7 +61,6 @@ async function applyPatches(printPatchFailuresInJson) {
     'third_party',
     'catapult',
   )
-  const dawnRepoPath = path.join(chromiumRepoPath, 'third_party', 'dawn')
   const devtoolsFrontendRepoPath = path.join(
     chromiumRepoPath,
     'third_party',
@@ -79,7 +77,6 @@ async function applyPatches(printPatchFailuresInJson) {
   const chromiumPatcher = new GitPatcher(patchesPath, chromiumRepoPath)
   const v8Patcher = new GitPatcher(v8PatchesPath, v8RepoPath)
   const catapultPatcher = new GitPatcher(catapultPatchesPath, catapultRepoPath)
-  const dawnPatcher = new GitPatcher(dawnPatchesPath, dawnRepoPath)
   const devtoolsFrontendPatcher = new GitPatcher(
     devtoolsFrontendPatchesPath,
     devtoolsFrontendRepoPath,
@@ -92,7 +89,6 @@ async function applyPatches(printPatchFailuresInJson) {
   const chromiumPatchStatus = await chromiumPatcher.applyPatches()
   const v8PatchStatus = await v8Patcher.applyPatches()
   const catapultPatchStatus = await catapultPatcher.applyPatches()
-  const dawnPatchStatus = await dawnPatcher.applyPatches()
   const devtoolsFrontendPatchStatus =
     await devtoolsFrontendPatcher.applyPatches()
   const searchEngineDataPatchStatus =
@@ -104,9 +100,6 @@ async function applyPatches(printPatchFailuresInJson) {
   catapultPatchStatus.forEach(
     (s) => (s.path = path.join('third_party', 'catapult', s.path)),
   )
-  dawnPatchStatus.forEach(
-    (s) => (s.path = path.join('third_party', 'dawn', s.path)),
-  )
   devtoolsFrontendPatchStatus.forEach(
     (s) =>
       (s.path = path.join('third_party', 'devtools-frontend', 'src', s.path)),
@@ -115,7 +108,6 @@ async function applyPatches(printPatchFailuresInJson) {
     ...chromiumPatchStatus,
     ...v8PatchStatus,
     ...catapultPatchStatus,
-    ...dawnPatchStatus,
     ...devtoolsFrontendPatchStatus,
     ...searchEngineDataPatchStatus,
   ]
