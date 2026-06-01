@@ -11,6 +11,10 @@ declare_args() {
 }
 
 declare_args() {
+  enable_playlist_by_default = is_ios
+}
+
+declare_args() {
   enable_playlist_webui = enable_playlist && toolkit_views
 }
 

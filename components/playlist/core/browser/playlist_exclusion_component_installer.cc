@@ -12,13 +12,14 @@
 #include <string>
 #include <vector>
 
+#include "base/feature_list.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "brave/components/brave_component_updater/browser/brave_on_demand_updater.h"
 #include "brave/components/playlist/core/browser/playlist_exclusion.h"
-#include "brave/components/playlist/core/common/buildflags/buildflags.h"
 #include "brave/components/playlist/core/common/constants.h"
+#include "brave/components/playlist/core/common/features.h"
 #include "components/component_updater/component_installer.h"
 #include "components/component_updater/component_updater_service.h"
 
@@ -130,10 +131,7 @@ bool PlaylistExclusionsComponentInstallerPolicy::IsBraveComponent() const {
 
 void RegisterPlaylistExclusionsComponent(
     component_updater::ComponentUpdateService* cus) {
-#if !BUILDFLAG(ENABLE_PLAYLIST)
-  return;
-#endif
-  if (!cus) {
+  if (!base::FeatureList::IsEnabled(playlist::features::kPlaylist) || !cus) {
     return;
   }
 
