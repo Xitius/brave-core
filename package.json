@@ -87,8 +87,7 @@
         "custom_vars": {
           "checkout_clang_coverage_tools": true,
           "checkout_clangd": true,
-          "download_reclient": true,
-          "dawn_go_version": "version:3@1.26.1"
+          "download_reclient": true
         }
       },
       "depot_tools": {
