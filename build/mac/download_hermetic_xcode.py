@@ -37,10 +37,12 @@ import deps  # pylint: disable=wrong-import-position
 # This contains binaries from Xcode 26.4 (17E202) along with the macOS 26.4 SDK
 # (25E251) and the Metal toolchain (17E188).
 XCODE_VERSION = '26.4.1'
+MAC_SDK_OFFICIAL_VERSION = '26.4'
+MAC_SDK_OFFICIAL_BUILD_VERSION = '25E251'
 XCODE_TOOLCHAIN_DOWNLOAD_URL = (
-    f'https://vhemnu34de4lf5cj6bx2wwshyy0egdxk.lambda-url.us-west-2.on.aws'
-    f'/xcode-hermetic-toolchain/xcode-hermetic-toolchain-{XCODE_VERSION}.tar.gz'
-)
+    'https://vhemnu34de4lf5cj6bx2wwshyy0egdxk.lambda-url.us-west-2.on.aws'
+    '/xcode-hermetic-toolchain/xcode-hermetic-toolchain-'
+    f'{MAC_SDK_OFFICIAL_VERSION}-{MAC_SDK_OFFICIAL_BUILD_VERSION}.tar.gz')
 
 # The toolchain will not be downloaded if the minimum OS version is not met. 19
 # is the Darwin major version number for macOS 10.15. Xcode 26.0 17A324 only
