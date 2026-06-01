@@ -148,6 +148,11 @@ TEST_F(TabManagementToolUnitTest, JsonAndArgumentValidationErrors) {
   EXPECT_THAT(RunTool(&tool, R"({"action":"move"})"),
               testing::HasSubstr("Missing 'tab_ids' array or 'move_group_id'"));
 
+  // close without tab_ids
+  EXPECT_THAT(RunTool(&tool, R"({"action":"close"})"),
+              testing::HasSubstr(
+                  "Missing or empty 'tab_ids' array for close operation"));
+
   // create_group without tab_ids
   EXPECT_THAT(
       RunTool(&tool, R"({"action":"create_group"})"),
