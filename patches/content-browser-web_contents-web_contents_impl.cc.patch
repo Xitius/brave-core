@@ -1,8 +1,8 @@
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index cf4b963dd0a9ed94ad3135b72ac09a3aad410244..818d3318a31c8dc60ef1f7bed85611d38ca26820 100644
+index 9c2253a1e664e6b27e9c818736fcd5b87d3a833b..3a9ef67213dd4f844b679367abad49fdf3c84e6d 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -5482,6 +5482,7 @@ FrameTree* WebContentsImpl::CreateNewWindow(
+@@ -5545,6 +5545,7 @@ FrameTree* WebContentsImpl::CreateNewWindow(
    // SiteInstance is created in a new BrowsingInstance.
    scoped_refptr<SiteInstance> site_instance;
    if (params.opener_suppressed) {
@@ -10,7 +10,7 @@ index cf4b963dd0a9ed94ad3135b72ac09a3aad410244..818d3318a31c8dc60ef1f7bed85611d3
      if (is_guest) {
        // For guests, noopener windows can be created in a new BrowsingInstance
        // as long as they preserve the guest's StoragePartition.
-@@ -5579,7 +5580,7 @@ FrameTree* WebContentsImpl::CreateNewWindow(
+@@ -5642,7 +5643,7 @@ FrameTree* WebContentsImpl::CreateNewWindow(
  
    // Save the window for later if we're not suppressing the opener (since it
    // will be shown immediately).

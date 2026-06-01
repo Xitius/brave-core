@@ -1,8 +1,8 @@
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/ManageSyncSettings.java b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/ManageSyncSettings.java
-index c6328dbceb0af518411fd05aa9c97b4280f161eb..d5d1213d8c1ea29d6b4c8421ec13129a501c6233 100644
+index 2fab9bcfd639a13bc4ad9c65d25e0b1be79d464a..bdd80fca35b75af1ca847cf7c24276524c5d78aa 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/ManageSyncSettings.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/sync/settings/ManageSyncSettings.java
-@@ -451,6 +451,7 @@ public class ManageSyncSettings extends ChromeBaseSettingsFragment
+@@ -461,6 +461,7 @@ public class ManageSyncSettings extends ChromeBaseSettingsFragment
       */
      private void updateSyncPreferences() {
          String signedInAccountName =

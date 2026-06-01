@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/actor/ui/handoff_button_controller.cc b/chrome/browser/actor/ui/handoff_button_controller.cc
-index f7efc4d9584c9c9cd3087d5f5452b0f14268f82f..232a0f87ffeccdd25b35181a54753af59afecb61 100644
+index 1066daf0c02572bf97a42c2b5dd3322c5d406bb6..53b044185d617aef79be0668139da734f492aaa5 100644
 --- a/chrome/browser/actor/ui/handoff_button_controller.cc
 +++ b/chrome/browser/actor/ui/handoff_button_controller.cc
-@@ -141,6 +141,7 @@ class GradientBubbleFrameView : public views::BubbleFrameView {
+@@ -142,6 +142,7 @@ class GradientBubbleFrameView : public views::BubbleFrameView {
        auto blur_filter = sk_make_sp<cc::BlurPaintFilter>(
            kShadowBlurSigma, kShadowBlurSigma, SkTileMode::kDecal, nullptr);
        shadow_flags.setImageFilter(std::move(blur_filter));

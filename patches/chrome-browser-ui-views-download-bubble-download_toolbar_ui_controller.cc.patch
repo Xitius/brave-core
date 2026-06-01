@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/ui/views/download/bubble/download_toolbar_ui_controller.cc b/chrome/browser/ui/views/download/bubble/download_toolbar_ui_controller.cc
-index 5360031b8a2b29a58572f1caa5531f168c710335..5d9e72d1fe4e398435fa46e620dfa25935da340b 100644
+index 522adcc2c4d0428ab17d3a1d93b6e1cc84a374ae..dc2028bab979a48b6d0b6b4c640a4f14411b4175 100644
 --- a/chrome/browser/ui/views/download/bubble/download_toolbar_ui_controller.cc
 +++ b/chrome/browser/ui/views/download/bubble/download_toolbar_ui_controller.cc
-@@ -686,6 +686,7 @@ void DownloadToolbarUIController::UpdateIcon() {
+@@ -697,6 +697,7 @@ void DownloadToolbarUIController::UpdateIcon() {
    }
    action_item_->SetProperty(kActionItemUnderlineIndicatorKey, is_icon_active);
  
@@ -10,7 +10,7 @@ index 5360031b8a2b29a58572f1caa5531f168c710335..5d9e72d1fe4e398435fa46e620dfa259
    action_item_->SetImage(ui::ImageModel::FromVectorIcon(*new_icon, icon_color));
  
    // Update the toolbar button's tooltip.
-@@ -735,6 +736,7 @@ void DownloadToolbarUIController::UpdateIcon() {
+@@ -746,6 +747,7 @@ void DownloadToolbarUIController::UpdateIcon() {
      return;
    }
    progress_ring->SetDownloading(progress_info_.progress_percentage);
