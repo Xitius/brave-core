@@ -113,6 +113,7 @@ source_set("extensions") {
     "//brave/components/constants",
     "//brave/components/de_amp/common",
     "//brave/components/debounce/core/common",
+    "//brave/components/local_ai/core",
     "//brave/components/ntp_background_images/common",
     "//brave/components/request_otr/common",
     "//brave/components/sidebar/browser",
