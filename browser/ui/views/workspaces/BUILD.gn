@@ -13,16 +13,23 @@ source_set("workspaces") {
     "workspaces_bubble_view.h",
   ]
 
-  deps = [
+  # Only the bubble view is consumed by other targets. The save dialog and
+  # row view are implementation details.
+  public = [ "workspaces_bubble_view.h" ]
+
+  public_deps = [
     "//base",
-    "//brave/app:brave_generated_resources_grit",
     "//brave/browser/workspaces",
+    "//ui/menus",
+    "//ui/views",
+  ]
+
+  deps = [
+    "//brave/app:brave_generated_resources_grit",
     "//brave/components/vector_icons",
     "//chrome/browser/ui/dialogs:browser_dialogs",
     "//components/constrained_window",
     "//ui/base",
-    "//ui/menus",
-    "//ui/views",
   ]
 }
 
